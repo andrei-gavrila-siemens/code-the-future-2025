@@ -1,1 +1,1 @@
-# Code the Future Hackathon 2025
+# Code the Future 2025
