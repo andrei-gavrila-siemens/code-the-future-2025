@@ -1,1 +1,11 @@
 # Code the Future 2025
+
+# Usage
+
+Create a new branch from the *main* branch and add your changes in your team folder. Once your project is done, create a *pull request*.
+
+# Rules
+
+1. The branch name that you create must have the name of your team.
+2. Use conventional commits (https://www.conventionalcommits.org/en/v1.0.0/).
+3. You must push your changes at least once every hour.
