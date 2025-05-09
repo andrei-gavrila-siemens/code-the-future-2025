@@ -5,3 +5,5 @@ for i in range(5):
     if cap.isOpened():
         print(f"Camera găsită la indexul {i}")
         cap.release()
+
+ # /home/remus/project/brat_sah/Realtime-OpenCV-Chess
