@@ -1,7 +1,13 @@
-# Code the Future 2025
+# Code the Future 2025 - Team 2D1B
+
+Drone simulator to for training pilots to defuse bombs, using robotic arm.
+
+Simulator environment - Unity w/ C#
+Live Drone Feed - Raspberry Pi 5 with Camera Module
+Robotic arm controlled using ATmega and joystick.
+
 
 # Usage
-
 Create a new branch from the *main* branch and add your changes in your team folder. Once your project is done, create a *pull request*.
 
 # Rules
