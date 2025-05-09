@@ -124,3 +124,37 @@ void loop() {
   }
   delay(100);
 }
+
+#include <Braccio.h>
+#include <Servo.h>
+
+Servo base;
+Servo shoulder;
+Servo elbow;
+Servo wrist_ver;
+Servo wrist_rot;
+Servo gripper;
+
+void setup() {
+  Serial.begin(9600);       // Serial prin USB
+  Braccio.begin();          // Inițializează servomotoarele
+}
+
+void loop() {
+  if (Serial.available()) {
+    String data = Serial.readStringUntil('\n');  // Citește linia de unghiuri
+    int angles[6];
+    int index = 0;
+
+    char ptr = strtok((char)data.c_str(), ",");
+    while (ptr != NULL && index < 6) {
+      angles[index++] = atoi(ptr);
+      ptr = strtok(NULL, ",");
+    }
+
+    if (index == 6) {
+      Braccio.ServoMovement(20, angles[0], angles[1], angles[2], angles[3], angles[4], angles[5]);
+      Serial.println("Mișcare executată.");
+    }
+  }
+}
