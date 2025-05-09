@@ -10,7 +10,7 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col sm:px-8 md:px-20 lg:px-40">
       <h1 className="text-2xl">Welcome to <span className="font-bold">CUBURI</span></h1>
       <p className="text-gray-500">Discover smart, colorful, and educational toy cubes — designed to inspire creativity and curiosity in every child.</p>
       
