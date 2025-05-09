@@ -104,22 +104,30 @@ void loop() {
   armController(); 
 
   
-  if(xValue != 0)
-  {
-    Braccio.ServoMovement(101 / (xValue+1) + 30, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
-  }
-  else
-  {
-    Braccio.ServoMovement(50, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
-  }
+  // if(xValue != 0)
+  // {
+  //  
+  // }
+  // else
+  // {
+  //   Braccio.ServoMovement(50 / (yValue+1) + 20, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
+  // }
 
-  //Wait 1 second
-  delay(25);
+  Braccio.ServoMovement(20, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
+
+  // delay(10);
 }
 
 void armController()
 {   
-    baseAngle += xValue * .3f;
+  baseAngle += xValue * .3f;
+  baseAngle = constrain(baseAngle, 0, 180);
+
+  shoulderAngle += yValue * .1f;
+  shoulderAngle = constrain(shoulderAngle, 0, 180);
+
+
+    Serial.println(shoulderAngle);
 
     // if (joystickShield.isRight()) {
     //   baseAngle += 5;
@@ -207,22 +215,22 @@ void joystickConfig(int xAxis, int yAxis)
   valueE = !digitalRead(E);
   valueF = !digitalRead(F);
 
-  Serial.print("MOV: ");
-  Serial.print(xValue);
-  Serial.print(" ; ");
-  Serial.print(yValue);
-  Serial.print("- A: ");
-  Serial.print(valueA);
-  Serial.print("- B: ");
-  Serial.print(valueB);
-  Serial.print("- C: ");
-  Serial.print(valueC);
-  Serial.print("- D: ");
-  Serial.print(valueD);
-  Serial.print("- E: ");
-  Serial.print(valueE);
-  Serial.print("- F: ");
-  Serial.println(valueF);
+  // Serial.print("MOV: ");
+  // Serial.print(xValue);
+  // Serial.print(" ; ");
+  // Serial.println(yValue);
+  // Serial.print("- A: ");
+  // Serial.print(valueA);
+  // Serial.print("- B: ");
+  // Serial.print(valueB);
+  // Serial.print("- C: ");
+  // Serial.print(valueC);
+  // Serial.print("- D: ");
+  // Serial.print(valueD);
+  // Serial.print("- E: ");
+  // Serial.print(valueE);
+  // Serial.print("- F: ");
+  // Serial.println(valueF);
 }
 
 // Normalize joystick values to -1 to 1 range
