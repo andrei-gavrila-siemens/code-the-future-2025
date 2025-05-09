@@ -99,21 +99,10 @@ void loop() {
   // Braccio.ServoMovement(10, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
   // Braccio.ServoMovement(20,           0,  15, 180, 170, 0,  73);  
 
-  //Wait 1 second
   joystickConfig(X, Y);
   armController(); 
 
-  
-  // if(xValue != 0)
-  // {
-  //  
-  // }
-  // else
-  // {
-  //   Braccio.ServoMovement(50 / (yValue+1) + 20, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
-  // }
-
-  Braccio.ServoMovement(20, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
+  Braccio.ServoMovement((110-xValue), baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
 
   // delay(10);
 }
@@ -132,8 +121,6 @@ void armController()
       wristVerAngle = constrain(wristVerAngle, 0, 180);
     }
  
-    
-    
     shoulderAngle = constrain(shoulderAngle, 0, 180);
    
     Serial.print("WRSIT: ");
@@ -142,12 +129,12 @@ void armController()
     Serial.print(shoulderAngle);
     Serial.println();
 
-    if (valueA) {
-      wristVerAngle += 5;
-    }
-    if (valueC) {
-      wristVerAngle -= 5;
-    }
+    // if (valueA) {
+    //   //Idle pos
+    // }
+    // if (valueC) {
+      
+    // }
 
     if (valueD) {
       gripperAngle = 10;
@@ -157,40 +144,6 @@ void armController()
       gripperAngle = 73;
       //Serial.println("Down clicked");
     }
-
-    
-    // if (joystickShield.isRightButton()) {
-    //   elbowAngle += 5;
-    //   Serial.println("Right clicked");
-    // }
-    // if (joystickShield.isLeftButton()) {
-    //   elbowAngle -= 5;
-    //   Serial.println("Left clicked");
-    // }
-    // if (joystickShield.isJoystickButton()) 
-    // {
-    //   if(!isJoystickBtnPressed)
-    //   {
-    //     if (isGrabbing)
-    //     {
-    //       isGrabbing = false;
-    //       gripperAngle = 10;
-    //       Serial.println("Gripper open");
-    //     }
-    //     else
-    //     {
-    //       isGrabbing = true;
-    //       gripperAngle = 90;
-    //       Serial.println("Gripper close");
-    //     }
-
-    //     isJoystickBtnPressed = true;
-    //   }
-    // }
-    // else
-    // {
-    //   isJoystickBtnPressed = false;
-    // }
 }
 
 void joystickConfig(int xAxis, int yAxis)
