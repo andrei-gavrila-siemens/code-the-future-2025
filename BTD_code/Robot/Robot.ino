@@ -25,6 +25,8 @@ const int GripPressed = 2;
 const int xAxisMovement = 0;
 const int yAxisMovement = 1;
 
+#define A 5
+
 const int JOYSTICK_MIN = 0;
 const int JOYSTICK_MAX = 4095;
 const int JOYSTICK_CENTER = 2047;
@@ -53,7 +55,6 @@ void setup() {
   //gripper (M6): 10 degrees
   Serial.begin(9600);
 
-  pinMode(GripPressed, INPUT_PULLUP);
 
   joystickShield.calibrateJoystick();
 
@@ -119,6 +120,16 @@ void armController()
       elbowAngle -= 5;
       Serial.println("Down clicked");
     }
+
+    
+    // if (joystickShield.isRightButton()) {
+    //   elbowAngle += 5;
+    //   Serial.println("Right clicked");
+    // }
+    // if (joystickShield.isLeftButton()) {
+    //   elbowAngle -= 5;
+    //   Serial.println("Left clicked");
+    // }
     if (joystickShield.isJoystickButton()) 
     {
       if(!isJoystickBtnPressed)
