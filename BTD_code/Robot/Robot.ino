@@ -20,8 +20,6 @@ Servo wrist_rot;
 Servo wrist_ver;
 Servo gripper;
 
-bool isIdle = false;
-int previousMillis = 0;
 int baseAngle_idle = 0;
 int shoulderAngle_idle = 0;
 int elbowAngle_idle = 180;
@@ -29,12 +27,12 @@ int wristVerAngle_idle = 90;
 int wristRotAngle_idle = 90;
 int gripperAngle_idle = 73;
 
-int baseAngle_auto_start = 0;
-int shoulderAngle_auto_start = 0;
-int elbowAngle_auto_start = 180;
-int wristVerAngle_auto_start = 90;
-int wristRotAngle_auto_start = 90;
-int gripperAngle_auto_start = 73;
+int baseAngle = 0;
+int shoulderAngle = 0;
+int elbowAngle = 180;
+int wristVerAngle = 90;
+int wristRotAngle = 90;
+int gripperAngle = 73;
 
 bool isGrabbing = false;
 bool isJoystickBtnPressed = false;
@@ -49,6 +47,14 @@ int dBtnValue;
 int eBtnValue;
 int fBtnValue;
 
+enum State {
+  Idle,
+  Auto,
+  Manual
+};
+
+State state = Idle;
+
 void setup() 
 {
   Serial.begin(9600);
@@ -61,70 +67,102 @@ void setup()
   pinMode(F, INPUT_PULLUP);
 
   Braccio.begin();
-  idle();
+  state = Idle;
+  // idle();
 }
 
-void loop() 
+void loop()
 {
-  joystickConfig(X, Y);
+  joystickConfig();
+  // Serial.println(state);
 
-  if (fBtnValue)
+  switch (state)
   {
-
+    default:
+    case Idle:
+      runIdle();
+      Braccio.ServoMovement(60, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
+      break;
+    case Auto:
+      runAuto();
+      Braccio.ServoMovement(60, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
+      break;
+    case Manual:
+      runManual();
+      Braccio.ServoMovement((110-sqrt(pow(xAxisValue, 2))), baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
+      break;
   }
+}
 
-  if (aBtnValue) 
-  {
-    long currentMillis = millis();
-    if (currentMillis - previousMillis > idleTimer)
-    {
-      isIdle = true;
-      idle();
-      Serial.println("Idle called");
-      previousMillis = currentMillis;
-    }
-  }
+void runIdle()
+{
+  // Serial.println("IDLE");
 
-  if (isIdle)
+  baseAngle = 0;
+  shoulderAngle = 0;
+  elbowAngle = 180;
+  wristVerAngle = 180;
+  wristRotAngle = 90;
+  gripperAngle = 73;
+
+  if (isAnyBtnPressed() && !aBtnValue)
   {
-    idle();
-    isIdle = false;
+    state = Manual;
   }
-  else
+}
+
+void runManual()
+{
+  // Serial.println("RUN");
+  armController();
+
+  if (aBtnValue)
   {
-    armController(); 
-    Braccio.ServoMovement((110-sqrt(pow(xAxisValue, 2))), baseAngle_idle, shoulderAngle_idle, elbowAngle_idle, wristVerAngle_idle, wristRotAngle_idle, gripperAngle_idle);
+    state = Idle;
+  }
+}
+
+void runAuto()
+{
+  if (cBtnValue)
+  {
+    state = Manual;
   }
 }
 
 void armController()
 {   
-  baseAngle_idle += xAxisValue * .1;
-  baseAngle_idle = constrain(baseAngle_idle, 0, 180);
-  shoulderAngle_idle += yAxisValue * .1;
-  if (shoulderAngle_idle < 160)
+  baseAngle += xAxisValue * .1;
+  baseAngle = constrain(baseAngle, 0, 180);
+  shoulderAngle += yAxisValue * .1;
+  if (shoulderAngle < 160)
   {
-    wristVerAngle_idle = 192 - shoulderAngle_idle;
-    wristVerAngle_idle = constrain(wristVerAngle_idle, 0, 180);
+    wristVerAngle = 192 - shoulderAngle;
+    wristVerAngle = constrain(wristVerAngle, 0, 180);
   }
 
-  shoulderAngle_idle = constrain(shoulderAngle_idle, 0, 180);
+  shoulderAngle = constrain(shoulderAngle, 0, 180);
   
   if (dBtnValue) 
   {
-    gripperAngle_idle = 10;
+    gripperAngle = 10;
   }
 
   if (bBtnValue) 
   {
-    gripperAngle_idle = 73;
+    gripperAngle = 73;
   }
 }
 
-void joystickConfig(int xAxis, int yAxis)
+bool isAnyBtnPressed()
 {
-  xAxisValue = analogRead(xAxis);
-  yAxisValue = analogRead(yAxis);
+  return (xAxisValue != 0 || yAxisValue != 0 || aBtnValue || bBtnValue || cBtnValue || dBtnValue || eBtnValue || fBtnValue);
+}
+
+void joystickConfig()
+{
+  xAxisValue = analogRead(X);
+  yAxisValue = analogRead(Y);
   xAxisValue = mapToRange(xAxisValue);
   yAxisValue = mapToRange(yAxisValue);
 
@@ -144,22 +182,27 @@ void joystickConfig(int xAxis, int yAxis)
   dBtnValue = !digitalRead(D);
   eBtnValue = !digitalRead(E);
   fBtnValue = !digitalRead(F);
+
+// Serial.print("x: ");
+// Serial.print(xAxisValue);
+// Serial.print(" | y: ");
+// Serial.print(yAxisValue);
+// Serial.print(" | a: ");
+// Serial.print(aBtnValue);
+// Serial.print(" | b: ");
+// Serial.print(bBtnValue);
+// Serial.print(" | c: ");
+// Serial.print(cBtnValue);
+// Serial.print(" | d: ");
+// Serial.print(dBtnValue);
+// Serial.print(" | e: ");
+// Serial.print(eBtnValue);
+// Serial.print(" | f ");
+// Serial.println(fBtnValue);
 }
 
 // Normalize joystick values to -1 to 1 range
 int mapToRange(int value) 
 {
   return (int)((float)(value - JOYSTICK_CENTER) / (JOYSTICK_CENTER) * 100);
-}
-
-void idle()
-{
-  baseAngle_idle = 0;
-  shoulderAngle_idle = 0;
-  elbowAngle_idle = 180;
-  wristVerAngle_idle = 180;
-  wristRotAngle_idle = 90;
-  gripperAngle_idle = 73;
-
-  Braccio.ServoMovement(60, 0, 0, 180, 180, 90, 73);
 }
