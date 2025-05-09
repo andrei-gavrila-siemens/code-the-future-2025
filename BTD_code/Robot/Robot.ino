@@ -12,7 +12,6 @@
 #include <Braccio.h>
 #include <Servo.h>
 #include <Arduino.h>
-#include <JoystickShield.h>
 
 Servo base;
 Servo shoulder;
@@ -25,12 +24,19 @@ const int GripPressed = 2;
 const int xAxisMovement = 0;
 const int yAxisMovement = 1;
 
-#define A 5
+#define X A0
+#define Y A1
+#define A 8
+#define B 2
+#define C 4
+#define D 7
+#define E 0
+#define F 1
 
 const int JOYSTICK_MIN = 0;
-const int JOYSTICK_MAX = 4095;
-const int JOYSTICK_CENTER = 2047;
-const int JOYSTICK_DEADZONE = 200;
+const int JOYSTICK_MAX = 1024;
+const int JOYSTICK_CENTER = 512;
+const int JOYSTICK_DEADZONE = 10;
 
 int baseAngle = 90;
 int shoulderAngle = 90;
@@ -38,8 +44,6 @@ int elbowAngle = 90;
 int wristVerAngle = 90;
 int wristRotAngle = 90;
 int gripperAngle = 73;
-
-JoystickShield joystickShield;
 
 bool isGrabbing = false;
 bool isJoystickBtnPressed = false;
@@ -55,8 +59,12 @@ void setup() {
   //gripper (M6): 10 degrees
   Serial.begin(9600);
 
-
-  joystickShield.calibrateJoystick();
+  pinMode(A, INPUT_PULLUP);
+  pinMode(B, INPUT_PULLUP);
+  pinMode(C, INPUT_PULLUP);
+  pinMode(D, INPUT_PULLUP);
+  pinMode(E, INPUT_PULLUP);
+  pinMode(F, INPUT_PULLUP);
 
   delay(1000);
 
@@ -83,8 +91,7 @@ void loop() {
   // Braccio.ServoMovement(20,           0,  15, 180, 170, 0,  73);  
 
   //Wait 1 second
-  joystickShield.processEvents();
-
+  joystickConfig(X, Y);
   //joystickInputs(GripPressed);
   armController(); 
 
@@ -96,30 +103,30 @@ void loop() {
 
 void armController()
 {   
-    if (joystickShield.isRight()) {
-      baseAngle += 5;
-      Serial.println("Right");
-    }   
-    if (joystickShield.isLeft()) {
-      baseAngle -= 5;
-      Serial.println("Left");
-    }
-     if (joystickShield.isUp()) {
-      shoulderAngle += 5;
-      Serial.println("Up");
-    } //move gripper
-    if (joystickShield.isDown()) {
-      shoulderAngle -= 5;
-      Serial.println("Down");
-    }
-    if (joystickShield.isUpButton()) {
-      elbowAngle += 5;
-      Serial.println("Up clicked");
-    }
-    if (joystickShield.isDownButton()) {
-      elbowAngle -= 5;
-      Serial.println("Down clicked");
-    }
+    // if (joystickShield.isRight()) {
+    //   baseAngle += 5;
+    //   Serial.println("Right");
+    // }   
+    // if (joystickShield.isLeft()) {
+    //   baseAngle -= 5;
+    //   Serial.println("Left");
+    // }
+    //  if (joystickShield.isUp()) {
+    //   shoulderAngle += 5;
+    //   Serial.println("Up");
+    // } //move gripper
+    // if (joystickShield.isDown()) {
+    //   shoulderAngle -= 5;
+    //   Serial.println("Down");
+    // }
+    // if (joystickShield.isUpButton()) {
+    //   elbowAngle += 5;
+    //   Serial.println("Up clicked");
+    // }
+    // if (joystickShield.isDownButton()) {
+    //   elbowAngle -= 5;
+    //   Serial.println("Down clicked");
+    // }
 
     
     // if (joystickShield.isRightButton()) {
@@ -130,31 +137,73 @@ void armController()
     //   elbowAngle -= 5;
     //   Serial.println("Left clicked");
     // }
-    if (joystickShield.isJoystickButton()) 
-    {
-      if(!isJoystickBtnPressed)
-      {
-        if (isGrabbing)
-        {
-          isGrabbing = false;
-          gripperAngle = 10;
-          Serial.println("Gripper open");
-        }
-        else
-        {
-          isGrabbing = true;
-          gripperAngle = 90;
-          Serial.println("Gripper close");
-        }
+    // if (joystickShield.isJoystickButton()) 
+    // {
+    //   if(!isJoystickBtnPressed)
+    //   {
+    //     if (isGrabbing)
+    //     {
+    //       isGrabbing = false;
+    //       gripperAngle = 10;
+    //       Serial.println("Gripper open");
+    //     }
+    //     else
+    //     {
+    //       isGrabbing = true;
+    //       gripperAngle = 90;
+    //       Serial.println("Gripper close");
+    //     }
 
-        isJoystickBtnPressed = true;
-      }
-    }
-    else
-    {
-      isJoystickBtnPressed = false;
-    }
+    //     isJoystickBtnPressed = true;
+    //   }
+    // }
+    // else
+    // {
+    //   isJoystickBtnPressed = false;
+    // }
 }
 
+void joystickConfig(int xAxis, int yAxis)
+{
+  int xValue = analogRead(xAxis);
+  int yValue = analogRead(yAxis);
+
+  int mappedX = mapJoystickValue(1024 - xValue);
+  int mappedY = mapJoystickValue(yValue);
+
+  int valueA = digitalRead(A);
+  int valueB = digitalRead(B);
+  int valueC = digitalRead(C);
+  int valueD = digitalRead(D);
+  int valueE = digitalRead(E);
+  int valueF = digitalRead(F);
+
+  Serial.print("MOV: ");
+  Serial.print(mapToRange(xValue));
+  Serial.print("-");
+  Serial.print(mapToRange(yValue));
+  Serial.print("- A: ");
+  Serial.print(valueA);
+  Serial.print("- B: ");
+  Serial.print(valueB);
+  Serial.print("- C: ");
+  Serial.print(valueC);
+  Serial.print("- D: ");
+  Serial.print(valueD);
+  Serial.print("- E: ");
+  Serial.print(valueE);
+  Serial.print("- F: ");
+  Serial.println(valueF);
+}
+
+// Normalize joystick values to -1 to 1 range
+int mapToRange(int value) {
+    return (int)((float)(value - JOYSTICK_CENTER) / (JOYSTICK_CENTER) * 100);
+}
+
+int mapJoystickValue(int value) {
+  // Map the joystick's 0-4095 range to -32768 to 32767
+  return map(value, JOYSTICK_MIN, JOYSTICK_MAX, 0, 180);
+}
 
 
