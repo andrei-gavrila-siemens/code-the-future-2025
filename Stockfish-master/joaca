@@ -1,0 +1,21 @@
+from stockfish import Stockfish
+
+stockfish = Stockfish("/usr/games/stockfish")  # calea uzuală pe Raspberry Pi
+stockfish.set_skill_level(5)  # 0–20
+
+print("Joci cu Stockfish. Tu ești alb. Scrie mutări ca 'e2e4'. Scrie 'exit' pentru a ieși.\n")
+stockfish.set_position([])
+
+while True:
+    user_move = input("Mutarea ta: ")
+    if user_move == "exit":
+        break
+
+    if not stockfish.is_move_correct(user_move):
+        print("Mutare invalidă. Încearcă din nou.")
+        continue
+
+    stockfish.make_moves_from_current_position([user_move])
+    ai_move = stockfish.get_best_move()
+    print(f"Stockfish răspunde: {ai_move}")
+    stockfish.make_moves_from_current_position([ai_move])
