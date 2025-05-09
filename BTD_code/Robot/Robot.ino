@@ -14,7 +14,6 @@
 #include <Arduino.h>
 #include <JoystickShield.h>
 
-
 Servo base;
 Servo shoulder;
 Servo elbow;
@@ -39,6 +38,9 @@ int wristRotAngle = 90;
 int gripperAngle = 73;
 
 JoystickShield joystickShield;
+
+bool isGrabbing = false;
+bool isJoystickBtnPressed = false;
 
 void setup() {
   //Initialization functions and set up the initial position for Braccio
@@ -93,35 +95,53 @@ void loop() {
 
 void armController()
 {   
-
-  
     if (joystickShield.isRight()) {
-       baseAngle += 5;
-       Serial.println("Right");
-     }      //move base
-     else if (joystickShield.isLeft()) {
-        baseAngle -= 5;
-        Serial.println("Left");
+      baseAngle += 5;
+      Serial.println("Right");
+    }   
+    if (joystickShield.isLeft()) {
+      baseAngle -= 5;
+      Serial.println("Left");
     }
-     else if (joystickShield.isUp()) {
-       shoulderAngle += 5;
-       Serial.println("Up");
+     if (joystickShield.isUp()) {
+      shoulderAngle += 5;
+      Serial.println("Up");
     } //move gripper
-    else if (joystickShield.isDown()) {
-       shoulderAngle -= 5;
-       Serial.println("Down");
+    if (joystickShield.isDown()) {
+      shoulderAngle -= 5;
+      Serial.println("Down");
     }
-    else if (joystickShield.isUpButton()) {
-       elbowAngle += 5;
-       Serial.println("Up clicked");
+    if (joystickShield.isUpButton()) {
+      elbowAngle += 5;
+      Serial.println("Up clicked");
     }
-    else if (joystickShield.isDownButton()) {
-       elbowAngle -= 5;
-       Serial.println("Down clicked");
+    if (joystickShield.isDownButton()) {
+      elbowAngle -= 5;
+      Serial.println("Down clicked");
     }
-    else if (joystickShield.isJoystickButton()) {
-       gripperAngle = 20;
-       Serial.println("Gripper clicked");
+    if (joystickShield.isJoystickButton()) 
+    {
+      if(!isJoystickBtnPressed)
+      {
+        if (isGrabbing)
+        {
+          isGrabbing = false;
+          gripperAngle = 10;
+          Serial.println("Gripper open");
+        }
+        else
+        {
+          isGrabbing = true;
+          gripperAngle = 90;
+          Serial.println("Gripper close");
+        }
+
+        isJoystickBtnPressed = true;
+      }
+    }
+    else
+    {
+      isJoystickBtnPressed = false;
     }
 }
 
