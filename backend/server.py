@@ -1,59 +1,61 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask import Flask, request, render_template
 from flask_socketio import SocketIO, emit
 import logging
 
-# --- Configurare Flask, CORS și Socket.IO ---
-app = Flask(__name__)
-CORS(app)
+# — Configurare Flask + SocketIO —
+app = Flask(__name__, static_folder='../frontend', template_folder='templates')
 socketio = SocketIO(app, cors_allowed_origins='*')
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s: %(message)s')
 
-# --- Stub-uri pentru camera și mișcare robot ---
+# — Stub-uri de demo —
 def search_medicine_with_camera(med_name: str) -> bool:
-    logging.info(f"[Camera] Căutare medicament '{med_name}'")
+    logging.info(f"[Camera] Căutare medicament: {med_name}")
     return True
 
 def initiate_robot_movement(med_name: str) -> bool:
-    logging.info(f"[Robot] Inițiere mișcare pentru '{med_name}'")
+    logging.info(f"[Robot] Mișcare robot pentru: {med_name}")
     return True
 
-# --- Handler la conectare WebSocket ---
+# — Servește frontend-ul —
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+# — WebSocket handlers —
 @socketio.on('connect')
-def on_connect(auth):
-    logging.info(f"[SocketIO] Client conectat: {request.sid}")
-    emit('status', {'message': 'Conexiune WebSocket stabilită'})
+def handle_connect():
+    logging.info(f"Client conectat: {request.sid}")
+    emit('status', {'message': 'Conexiune WebSocket OK'})
 
-# --- Handler pentru comenzi primite prin WS ---
 @socketio.on('command')
-def on_command(data):
-    med = data.get('cmd', '').strip().lower()
-    logging.info(f"[API WS] Comandă primită: '{med}'")
+def handle_command(data):
+    cmd = data.get('cmd', '').strip().lower()
+    logging.info(f"Comandă primită: {cmd}")
 
-    # 1) detectare cu camera
-    if not search_medicine_with_camera(med):
-        emit('result', {
+    if not search_medicine_with_camera(cmd):
+        return emit('result', {
             'status': 'not_found',
-            'message': f"Medicament '{med}' NU a fost găsit"
+            'message': f"Medicament ‘{cmd}’ NU a fost găsit"
         })
-        return
 
-    # 2) inițiere mișcare robot
-    if not initiate_robot_movement(med):
-        emit('result', {
+    if not initiate_robot_movement(cmd):
+        return emit('result', {
             'status': 'error',
-            'message': f"Medicament '{med}' găsit, dar mișcarea robotului a eșuat"
+            'message': f"Med ‘{cmd}’ găsit, dar mișcare eșuată"
         })
-        return
 
-    # 3) succes
     emit('result', {
         'status': 'ok',
-        'message': f"Medicament '{med}' găsit și robotul a pornit mișcarea"
+        'message': f"Medicament ‘{cmd}’ găsit și robot în mișcare"
     })
 
-# --- Pornire server WS+HTTP ---
+# — Pornire HTTPS + SocketIO —
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000)
+    socketio.run(
+        app,
+        host='0.0.0.0',
+        port=5000,
+        ssl_context=('../cert.pem', '../key.pem')
+    )
