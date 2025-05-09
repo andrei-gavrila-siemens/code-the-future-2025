@@ -1,0 +1,4 @@
+0 Arcada
+1 Cilindru
+2 Cub
+3 Piramida
