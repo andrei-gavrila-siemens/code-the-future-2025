@@ -1,0 +1,3 @@
+../Core/Src/Braccio.c:3:13:set_pwm_us	24	static
+../Core/Src/Braccio.c:10:6:Braccio_Init	16	static
+../Core/Src/Braccio.c:20:6:Braccio_Move	24	static
