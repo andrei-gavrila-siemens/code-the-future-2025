@@ -4,7 +4,8 @@ import numpy as np
 import serial
 import time
 
-arduino = serial.Serial('COM3', 9600)
+arduino = serial.Serial('/dev/ttyACM0', 9600)
+time.sleep(2)
 
 def detect_colors(frame, color_ranges, min_area_threshold):
     hsv_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
@@ -60,7 +61,7 @@ if __name__ == "__main__":
             if blurred is not None:
                 frame_with_detections = blurred
                 detected_colors = detect_colors(blurred, color_ranges_to_detect, min_area_threshold)
-
+                last_color = None
                 if detected_colors:
                     print("Detected colors:")
                     for color, boxes in detected_colors.items():
@@ -78,8 +79,31 @@ if __name__ == "__main__":
                                 cv2.putText(frame_with_detections, color, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, draw_color, 2)
                         else:
                             print(f"Warning: No draw color defined for '{color}'.")
+                    for color in detected_colors:
+                        if color == "red":
+                            arduino.write(b"red\n")
+                            last_color = color
+                        elif color == "blue":
+                            arduino.write(b"blue\n")
+                            last_color = color
+                        elif color == "green":
+                            arduino.write(b"green\n")
+                            last_color = color
+                        elif color == "yellow":
+                            arduino.write(b"yellow\n")
+                            last_color = color    
+                        elif color == "orange":
+                            arduino.write(b"orange\n")
+                            last_color = color
+                        elif color == "purple":
+                            arduino.write(b"purple\n")
+                            last_color = color    
+
+
                 else:
                     print("No colors detected.")
+                    last_color = None
+
 
                 # Display the frame with bounding boxes and color names
                 cv2.imshow("Color Detection", cv2.cvtColor(frame_with_detections, cv2.COLOR_RGB2BGR))
@@ -87,13 +111,13 @@ if __name__ == "__main__":
             if cv2.waitKey(1) == ord('q'):
                 break
             
-            if draw_color == "red":
-                arduino.write(draw_color.encode())
+            
 
     finally:
         picam2.stop()
         picam2.close()
         cv2.destroyAllWindows()
+
 
 
 
