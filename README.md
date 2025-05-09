@@ -1,11 +1,30 @@
-# Code the Future 2025
+# Siemens-Heckaton
+8-10 mai 2025.</br> Tematica: Embeded si AI.</br>
+Idee propusa: Brat robotic cu post fix ce manipuleaza medicamente.
 
-# Usage
+## Organizare:
+Se creaza branch-uri separate pentru fiecare membru si se da comit strict in branch-ul lui. </br>
+Fiecare functie, element ce tine de metodologie trebuie documentat si facut cat mai clean.
+</br>
+Exemplu:</br>
 
-Create a new branch from the *main* branch and add your changes in your team folder. Once your project is done, create a *pull request*.
+#functie de .... </br>
+def functie(v1, v2):</br>
+   ....</br>
+ return v1,v2</br>
 
-# Rules
+### Fisiere </br>
+Acestea trebuie sa aiba un nume din care este usor de dedus continutul. De exemplu: </br>
+Metrici.py -> Implementare functii de calcul de metrici. </br>
+Fisierele din dev au scopul de a putea lucra fara a afecta main-ul.
 
-1. The branch name that you create must have the name of your team.
-2. Use conventional commits (https://www.conventionalcommits.org/en/v1.0.0/).
-3. You must push your changes at least once every hour.
+
+
+## Reading
+Fiecare articol citit/utilizat se va trece in fisierul sources.txt sub forma:
+Metoda Vizata - link articol.
+
+Exemplu: </br>
+Deep Residual Learning for Image Recognition (ResNet) - https://arxiv.org/abs/1512.03385v1
+
+
