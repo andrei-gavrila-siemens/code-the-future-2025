@@ -51,7 +51,11 @@ export default function CartSheet() {
           </div>
           <p className='mb-8 text-xl'>Your order total is: <span className='font-bold'>30.00 lei</span></p>
           <SheetClose asChild>
-            <Button>Confirm order</Button>
+            <Button asChild>
+              <Link href="/confirmation">
+                Confirm order
+              </Link>
+            </Button>
           </SheetClose>
           <SheetClose asChild>
             <Button variant="secondary" className="ms-2" asChild>
