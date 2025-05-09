@@ -110,9 +110,6 @@ void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef* htim_pwm)
     GPIO_InitStruct.Alternate = GPIO_AF1_TIM1;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    /* TIM1 interrupt Init */
-    HAL_NVIC_SetPriority(TIM1_TRG_COM_TIM11_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(TIM1_TRG_COM_TIM11_IRQn);
   /* USER CODE BEGIN TIM1_MspInit 1 */
 
   /* USER CODE END TIM1_MspInit 1 */
@@ -195,9 +192,6 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
     GPIO_InitStruct.Alternate = GPIO_AF3_TIM11;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    /* TIM11 interrupt Init */
-    HAL_NVIC_SetPriority(TIM1_TRG_COM_TIM11_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(TIM1_TRG_COM_TIM11_IRQn);
   /* USER CODE BEGIN TIM11_MspInit 1 */
 
   /* USER CODE END TIM11_MspInit 1 */
@@ -325,15 +319,6 @@ void HAL_TIM_PWM_MspDeInit(TIM_HandleTypeDef* htim_pwm)
     */
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_8|GPIO_PIN_10);
 
-    /* TIM1 interrupt DeInit */
-  /* USER CODE BEGIN TIM1:TIM1_TRG_COM_TIM11_IRQn disable */
-    /**
-    * Uncomment the line below to disable the "TIM1_TRG_COM_TIM11_IRQn" interrupt
-    * Be aware, disabling shared interrupt may affect other IPs
-    */
-    /* HAL_NVIC_DisableIRQ(TIM1_TRG_COM_TIM11_IRQn); */
-  /* USER CODE END TIM1:TIM1_TRG_COM_TIM11_IRQn disable */
-
   /* USER CODE BEGIN TIM1_MspDeInit 1 */
 
   /* USER CODE END TIM1_MspDeInit 1 */
@@ -394,15 +379,6 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base)
     PB9     ------> TIM11_CH1
     */
     HAL_GPIO_DeInit(GPIOB, GPIO_PIN_9);
-
-    /* TIM11 interrupt DeInit */
-  /* USER CODE BEGIN TIM11:TIM1_TRG_COM_TIM11_IRQn disable */
-    /**
-    * Uncomment the line below to disable the "TIM1_TRG_COM_TIM11_IRQn" interrupt
-    * Be aware, disabling shared interrupt may affect other IPs
-    */
-    /* HAL_NVIC_DisableIRQ(TIM1_TRG_COM_TIM11_IRQn); */
-  /* USER CODE END TIM11:TIM1_TRG_COM_TIM11_IRQn disable */
 
   /* USER CODE BEGIN TIM11_MspDeInit 1 */
 

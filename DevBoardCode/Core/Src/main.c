@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include "Braccio.h"
 #include "Ultra.h"
+#include "uart_comm.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -119,12 +120,15 @@ int main(void)
 
   /* Initialize Braccio servos (start PWM) */
   Braccio_Init(&arm);
+  UART_Comm_Init(&huart2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  UART_Comm_SendString("Hello from STM32\r\n");
+
 	  dist = Ultrasonic_ReadDistance();
 	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
 	  Braccio_Move(&arm, 1500, 1500, 1500, 1500, 1500, 1500); //Default

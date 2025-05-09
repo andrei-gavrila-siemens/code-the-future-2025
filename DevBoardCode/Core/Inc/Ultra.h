@@ -1,5 +1,5 @@
-#ifndef ULTRASONIC_H_
-#define ULTRASONIC_H_
+#ifndef ULTRA_H_
+#define ULTRA_H_
 
 #include "stm32f4xx_hal.h"
 
