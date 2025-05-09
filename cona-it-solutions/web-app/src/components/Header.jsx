@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescri
 export default function Header() {
 
   return (
-    <nav className="w-full border-b">
+    <nav className="w-full border-b sticky top-0 bg-white">
       <div className="flex items-center justify-between px-8 py-5">
         <Link href="/" className="flex items-center">
           <span className="text-xl font-bold">CUBURI</span>

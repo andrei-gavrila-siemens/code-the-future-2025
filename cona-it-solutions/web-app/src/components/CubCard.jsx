@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card"
 import { Button } from './ui/button'
 import Image from 'next/image'
+import Link from 'next/link'
 
 export default function CubCard() {
   return (
@@ -22,7 +23,9 @@ export default function CubCard() {
       </CardContent>
       <CardFooter className="flex gap-4">
         <Button>Add to cart</Button>
-        <Button variant="secondary">View Product</Button>
+        <Link href="/products/1">
+          <Button variant="secondary">View Product</Button>
+        </Link>
       </CardFooter>
     </Card>
   )

@@ -1,5 +1,4 @@
 import CubCard from "@/components/CubCard";
-import Image from "next/image";
 import Link from "next/link";
 
 
