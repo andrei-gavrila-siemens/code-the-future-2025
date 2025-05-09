@@ -24,7 +24,7 @@ def detect_colors(frame, color_ranges, min_area_threshold):
                     detected_colors[color_name].append(((x, y), (x + w, y + h)))
     return detected_colors
 
-def apply_gaussian_blur(frame, kernel_size=(5, 5)):
+def apply_gaussian_blur(frame, kernel_size=(1, 1)):
     """Applies Gaussian blur to the input frame."""
     blurred_frame = cv2.GaussianBlur(frame, kernel_size, 20)
     return blurred_frame
@@ -36,14 +36,18 @@ if __name__ == "__main__":
     picam2.start()
 
     color_ranges_to_detect = {
-        'red': [((0, 70, 50), (10, 255, 255)), ((170, 70, 50), (180, 255, 255))],
-        'blue': [((100, 50, 50), (130, 255, 255))],
-        'green': [((50, 50, 50), (90, 255, 255))],
-        'yellow': [((25, 150, 100), (40, 255, 255))],
-        'orange': [((5, 100, 100), (20, 255, 255))],
-        'purple': [((170, 70, 130), (190, 90, 140)),
-                   ((140, 40, 150), (165, 180, 255))]
-    }
+    'red': [((0, 70, 50), (8, 255, 255)), ((172, 70, 50), (180, 255, 255))],
+    'blue': [((100, 50, 50), (130, 255, 255))],
+    'green': [((50, 50, 50), (90, 255, 255))],
+    'yellow': [((25, 150, 100), (40, 255, 255))],
+    'orange': [((5, 100, 100), (20, 255, 255))],
+    'purple': [
+        ((135, 70, 80), (155, 255, 255)),
+        ((130, 40, 150), (160, 180, 255)),
+        ((135, 60, 30), (150, 200, 120))
+    ]
+}
+
     min_area_threshold = 2000
     color_draw = {
         'red': (255, 0, 0),
