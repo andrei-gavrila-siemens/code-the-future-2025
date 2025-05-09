@@ -1,32 +1,126 @@
-#include <Braccio.h>
-#include <Servo.h>
+[14:18, 09.05.2025] +40 743 201 257: import cv2
+from ultralytics import YOLO
+import serial
+import time
+import chess.engine
 
-Servo base, shoulder, elbow, wrist_ver, wrist_rot, gripper;
+# Încarcă modelul YOLO antrenat pentru recunoașterea autorizației și pieselor de șah
+model = YOLO("best.pt")  # Modelul tău antrenat
+
+# Deschide portul serial pentru comunicația cu Arduino
+arduino = serial.Serial('/dev/ttyACM0', 9600)  # Asigură-te că portul serial este corect
+
+def is_authorized(frame):
+    results = model(frame)  # Folosește YOLO pentru detectarea obiectelor
+    for r in results:
+        for box in r.boxes:
+            if r.names[int(box.cls)] == "autorizat":  # Verifică dacă este o persoană autorizată
+                return True
+    return False
+
+def record_and_send():
+    # Exemplu: Salvează o secvență de poziții pentru brațul robotic
+    print("Inregistrare in curs...")
+    positions = [
+        (90, 90, 90, 90, 90, 73),  # Exemplu de poziții pentru braț
+        (80, 85, 90, 90, 90, 73)
+    ]
+    for pos in positions:
+        command = ",".join(map(str, pos)) + "\n"  # Crează comanda pentru Arduino
+        arduino.write(command.encode())  # Trimite comanda către Arduino
+        time.sleep(1)  # Pauză între comenzi
+
+def play_chess():
+    # Funcția pentru a juca șah cu ajutorul Stockfish
+    board = chess.Board()
+    engine = chess.engine.SimpleEngine.popen_uci("/usr/games/stockfish")  # Motorul Stockfish
+
+    while not board.is_game_over():
+        move = engine.play(board, chess.engine.Limit(time=0.1)).move  # Mutarea AI
+        print("Mutare AI:", move)
+        board.push(move)
+        # Adaugă aici logica de detectare a piesei și trimiterea mutării la Arduino
+        time.sleep(2)
+    engine.quit()
+
+# Capturăm video de la cameră
+cap = cv2.VideoCapture(0)
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # Verifică dacă persoana autorizată este detectată
+    if is_authorized(frame):
+        print("Persoana autorizata detectata. Porneste inregistrarea.")
+        record_and_send()  # Înregistrează și trimite comenzile pentru braț
+        # După învățare, poți apela play_chess()
+        break
+
+cap.release()
+arduino.close()
+[14:18, 09.05.2025] +40 743 201 257: pip3 install ultralytics opencv-python pyserial chess
+[14:51, 09.05.2025] +40 743 201 257: #include <Braccio.h>
+#include <Servo.h>
+#include <WiFi.h>  // Include biblioteca WiFi pentru Arduino UNO R4 WiFi
+
+// Detalii Wi-Fi
+const char* ssid = "Guest-wifi";  // Numele rețelei Wi-Fi
+const char* password = "icdt2020";  // Parola rețelei Wi-Fi
+
+// Conectare Wi-Fi
+WiFiServer server(5000);  // Server pe portul 5000
+
+// Initializează servomotoarele pentru Brațul TinkerKit Braccio
+Servo base;
+Servo shoulder;
+Servo elbow;
+Servo wrist_ver;
+Servo wrist_rot;
+Servo gripper;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Braccio.begin();
-  Braccio.ServoMovement(20, 90, 90, 90, 90, 90, 10);  // poz initiala
+
+  // Conectare la Wi-Fi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Conectare la WiFi...");
+  }
+  Serial.println("Conectat la WiFi");
+  Serial.print("IP-ul local al Arduino: ");
+  Serial.println(WiFi.localIP());  // Afișează IP-ul atribuit pentru Arduino
+
+  server.begin();  // Începe serverul pe portul 5000
 }
 
 void loop() {
-  if (Serial.available()) {
-    String comanda = Serial.readStringUntil('\n');
+  WiFiClient client = server.available();  // Așteaptă conexiuni de la Raspberry Pi
 
-    if (comanda.startsWith("MOVE:")) {
-      // Extrag coordonatele
-      int index = comanda.indexOf(":");
-      String coord = comanda.substring(index + 1);
-      int vir = coord.indexOf(",");
-      int x = coord.substring(0, vir).toInt();
-      int y = coord.substring(vir + 1).toInt();
+  if (client) {
+    Serial.println("Client conectat");
+    while (client.connected()) {
+      if (client.available()) {
+        String data = client.readStringUntil('\n');  // Citește datele trimise de Raspberry Pi
+        int angles[6];
+        int index = 0;
 
-      // traaduc coordonatele în unghiuri servo (simplificat)
-      int baseAngle = map(x, 0, 640, 0, 180);
-      int shoulderAngle = map(y, 0, 480, 45, 135);
+        // Extrage unghiurile din comanda primită
+        char* ptr = strtok((char*)data.c_str(), ",");
+        while (ptr != NULL && index < 6) {
+          angles[index++] = atoi(ptr);  // Salvează unghiurile pentru servomotoare
+          ptr = strtok(NULL, ",");
+        }
 
-      // miscare
-      Braccio.ServoMovement(20, baseAngle, shoulderAngle, 90, 90, 90, 10);
+        // Mișcă brațul robotic conform unghiurilor primite
+        Braccio.ServoMovement(20, angles[0], angles[1], angles[2], angles[3], angles[4], angles[5]);
+      }
     }
+    client.stop();
+    Serial.println("Client deconectat");
   }
+  delay(100);
 }
