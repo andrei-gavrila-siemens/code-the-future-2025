@@ -126,7 +126,7 @@ void _Braccio::_softStart(int soft_start_level){
 int _Braccio::ServoMovement(int stepDelay, int vBase, int vShoulder, int vElbow,int vWrist_ver, int vWrist_rot, int vgripper) {
 
 	// Check values, to avoid dangerous positions for the Braccio
-    	if (stepDelay > 30) stepDelay = 30;
+    	if (stepDelay > 30) stepDelay = 30;#include <JoystickShield.h>
 	if (stepDelay < 10) stepDelay = 10;
 	if (vBase < 0) vBase=0;
 	if (vBase > 180) vBase=180;

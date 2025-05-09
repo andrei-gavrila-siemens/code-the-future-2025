@@ -11,9 +11,10 @@
 
 #include <Braccio.h>
 #include <Servo.h>
+#include <Arduino.h>
 #include <JoystickShield.h>
 
-JoystickShield joystickShield;
+
 Servo base;
 Servo shoulder;
 Servo elbow;
@@ -21,12 +22,23 @@ Servo wrist_rot;
 Servo wrist_ver;
 Servo gripper;
 
+const int GripPressed = 2;
+const int xAxisMovement = 0;
+const int yAxisMovement = 1;
+
+const int JOYSTICK_MIN = 0;
+const int JOYSTICK_MAX = 4095;
+const int JOYSTICK_CENTER = 2047;
+const int JOYSTICK_DEADZONE = 200;
+
 int baseAngle = 90;
 int shoulderAngle = 90;
 int elbowAngle = 90;
 int wristVerAngle = 90;
 int wristRotAngle = 90;
 int gripperAngle = 73;
+
+JoystickShield joystickShield;
 
 void setup() {
   //Initialization functions and set up the initial position for Braccio
@@ -39,9 +51,12 @@ void setup() {
   //gripper (M6): 10 degrees
   Serial.begin(9600);
 
-  delay(1000);
+  pinMode(GripPressed, INPUT_PULLUP);
 
   joystickShield.calibrateJoystick();
+
+  delay(1000);
+
   
   Braccio.begin();
 }
@@ -65,9 +80,9 @@ void loop() {
   // Braccio.ServoMovement(20,           0,  15, 180, 170, 0,  73);  
 
   //Wait 1 second
-
   joystickShield.processEvents();
 
+  //joystickInputs(GripPressed);
   armController(); 
 
   Braccio.ServoMovement(50, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
@@ -78,21 +93,37 @@ void loop() {
 
 void armController()
 {   
-    Serial.print("x ");	Serial.print(joystickShield.xAmplitude());Serial.print(" y ");Serial.println(joystickShield.yAmplitude());
-    if      (joystickShield.isRight()) {
-      baseAngle ++;
-      Serial.println("Right");
-      }      //move base
-    else if (joystickShield.isLeft()) {
-      baseAngle--;
-       Serial.println("Left");
-      }
-    else if (joystickShield.isUp()) {
-      shoulderAngle++;
+
+  
+    if (joystickShield.isRight()) {
+       baseAngle += 5;
+       Serial.println("Right");
+     }      //move base
+     else if (joystickShield.isLeft()) {
+        baseAngle -= 5;
+        Serial.println("Left");
+    }
+     else if (joystickShield.isUp()) {
+       shoulderAngle += 5;
        Serial.println("Up");
-      } //move gripper
+    } //move gripper
     else if (joystickShield.isDown()) {
+       shoulderAngle -= 5;
        Serial.println("Down");
-      shoulderAngle--;
-      }
+    }
+    else if (joystickShield.isUpButton()) {
+       elbowAngle += 5;
+       Serial.println("Up clicked");
+    }
+    else if (joystickShield.isDownButton()) {
+       elbowAngle -= 5;
+       Serial.println("Down clicked");
+    }
+    else if (joystickShield.isJoystickButton()) {
+       gripperAngle = 20;
+       Serial.println("Gripper clicked");
+    }
 }
+
+
+

@@ -80,13 +80,13 @@ void JoystickShield::setButtonPins(byte pinSelect, byte pinUp, byte pinRight, by
 	pin_E_button		= pinE;
 
     // set Button pins to input mode
-    pinMode(pin_joystick_button, INPUT);
-    pinMode(pin_up_button      , INPUT);
-    pinMode(pin_right_button   , INPUT);
-    pinMode(pin_down_button    , INPUT);
-    pinMode(pin_left_button    , INPUT);
-	pinMode(pin_E_button	   , INPUT);
-	pinMode(pin_F_button       , INPUT);
+    pinMode(pin_joystick_button, INPUT_PULLUP);
+    pinMode(pin_up_button      , INPUT_PULLUP);
+    pinMode(pin_right_button   , INPUT_PULLUP);
+    pinMode(pin_down_button    , INPUT_PULLUP);
+    pinMode(pin_left_button    , INPUT_PULLUP);
+	pinMode(pin_E_button	   , INPUT_PULLUP);
+	pinMode(pin_F_button       , INPUT_PULLUP);
 
 	// buttons use pull-up resistors by default
 	setButtonPinsUnpressedState(LOW, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH);
