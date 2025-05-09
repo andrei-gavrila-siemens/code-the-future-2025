@@ -1,0 +1,221 @@
+import cv2
+import numpy as np
+import os
+
+def get_square_color(square_img, threshold_value=127):
+    """
+    Determines if a square is predominantly light or dark.
+    This is a very simple heuristic.
+    """
+    gray_square = cv2.cvtColor(square_img, cv2.COLOR_BGR2GRAY)
+    average_intensity = np.mean(gray_square)
+    if average_intensity > threshold_value:
+        return 'light_square_color' # e.g. white square
+    else:
+        return 'dark_square_color' # e.g. black square
+
+def detect_piece_presence_and_color(square_img, empty_square_avg_intensity, light_piece_threshold=150, dark_piece_threshold=100, presence_diff_threshold=30):
+    """
+    VERY SIMPLIFIED piece presence and color detection.
+    Returns: (piece_char, piece_color) or (None, None)
+    piece_char: 'P' for pawn (generic piece), None if empty
+    piece_color: 'w' or 'b', None if empty
+    """
+    gray_square = cv2.cvtColor(square_img, cv2.COLOR_BGR2GRAY)
+    current_avg_intensity = np.mean(gray_square)
+
+    # Heuristic: if average intensity significantly different from an 'empty' square, assume piece
+    if abs(current_avg_intensity - empty_square_avg_intensity) > presence_diff_threshold:
+        # Super simple color detection based on average intensity
+        if current_avg_intensity > light_piece_threshold: # Brighter pixels -> White piece
+            return 'P', 'w' # 'P' is a placeholder for ANY white piece
+        elif current_avg_intensity < dark_piece_threshold: # Darker pixels -> Black piece
+            return 'p', 'b' # 'p' is a placeholder for ANY black piece
+        else:
+            return 'X', 'unknown' # Could be a piece of intermediate color or complex texture
+    return None, None
+
+
+def image_to_fen_piece_placement(image_path, board_pattern_size=(7, 7)):
+    """
+    Attempts to extract the piece placement part of a FEN string from an image.
+    board_pattern_size: Internal corners of the chessboard (e.g., 7x7 for an 8x8 board).
+    """
+    img = cv2.imread(image_path)
+    if img is None:
+        print(f"Error: Could not load image {image_path}")
+        return None
+
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # 1. Find chessboard corners
+    ret, corners = cv2.findChessboardCorners(gray, board_pattern_size, None)
+
+    if not ret:
+        print("Chessboard corners not found. Try adjusting board_pattern_size or image quality.")
+        # Fallback or more advanced board detection would be needed here.
+        # For this example, we'll just show the original image.
+        cv2.imshow("Original Image (Corners Not Found)", cv2.resize(img, (600, 600)))
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        return None
+
+    # Refine corner positions
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+    corners_refined = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
+
+    # Draw corners (optional, for visualization)
+    img_with_corners = cv2.drawChessboardCorners(img.copy(), board_pattern_size, corners_refined, ret)
+    # cv2.imshow("Detected Corners", cv2.resize(img_with_corners, (600,600)))
+    # cv2.waitKey(1) # Wait a bit
+
+    # 2. Get perspective transform
+    # Define the destination points for a "flat" 512x512 board image
+    # Order of corners from findChessboardCorners: starts top-left, proceeds row-wise
+    # (or column-wise depending on board orientation during detection)
+    # We need to ensure corners are in order: top-left, top-right, bottom-right, bottom-left
+
+    # Assuming standard orientation (top-left is corners[0])
+    # The corners array has shape (number_of_corners, 1, 2)
+    src_pts = np.float32([
+        corners_refined[0][0],  # Top-left
+        corners_refined[board_pattern_size[0] - 1][0],  # Top-right
+        corners_refined[board_pattern_size[0] * board_pattern_size[1] - 1][0],  # Bottom-right
+        corners_refined[board_pattern_size[0] * (board_pattern_size[1] -1)][0] # Bottom-left
+    ])
+
+
+    # If your board is detected rotated, you might need to adjust src_pts indexing.
+    # For example, if corners are found column-wise first:
+    # src_pts = np.float32([
+    #     corners_refined[0][0], # Top-left
+    #     corners_refined[board_pattern_size[1]*(board_pattern_size[0]-1)][0], # Top-right
+    #     corners_refined[board_pattern_size[0]*board_pattern_size[1]-1][0], # Bottom-right
+    #     corners_refined[board_pattern_size[1]-1][0] # Bottom-left
+    # ])
+
+
+    board_size_px = 512 # Size of the warped board image
+    dst_pts = np.float32([
+        [0, 0],
+        [board_size_px - 1, 0],
+        [board_size_px - 1, board_size_px - 1],
+        [0, board_size_px - 1]
+    ])
+
+    matrix = cv2.getPerspectiveTransform(src_pts, dst_pts)
+    warped_board = cv2.warpPerspective(img, matrix, (board_size_px, board_size_px))
+    cv2.imshow("Warped Board", warped_board)
+    cv2.waitKey(1)
+
+    # 3. Square Segmentation and Rudimentary Piece Detection
+    square_size = board_size_px // 8
+    fen_rows = []
+    board_representation = [[' ' for _ in range(8)] for _ in range(8)] # 8x8 grid
+
+    # Estimate average intensity of a few assumed empty squares
+    # THIS IS A HUGE SIMPLIFICATION AND WILL LIKELY FAIL
+    # A better way is to calibrate with known empty squares.
+    # For now, let's assume a corner square is empty and of a certain color
+    sample_empty_square1 = warped_board[0:square_size, 0:square_size] # a8
+    sample_empty_square2 = warped_board[0:square_size, (7*square_size):board_size_px] # h8
+    avg_empty_intensity1 = np.mean(cv2.cvtColor(sample_empty_square1, cv2.COLOR_BGR2GRAY))
+    avg_empty_intensity2 = np.mean(cv2.cvtColor(sample_empty_square2, cv2.COLOR_BGR2GRAY))
+    # Use an average or a fixed value if known
+    # This needs robust calibration. For now, let's take one.
+    # You might need to manually identify an empty light and an empty dark square.
+    # For simplicity, let's assume our detect_piece_presence_and_color uses one of these.
+    # Let's assume a8 is an empty dark square for this heuristic.
+    calibrated_empty_dark_square_intensity = avg_empty_intensity1
+    # And assume h1 is an empty dark square (if player is white at bottom)
+    # sample_empty_square_h1 = warped_board[(7*square_size):board_size_px, (7*square_size):board_size_px]
+    # calibrated_empty_light_square_intensity = np.mean(cv2.cvtColor(sample_empty_square_h1, cv2.COLOR_BGR2GRAY))
+
+
+    print(f"Sample empty dark square (a8) avg intensity: {calibrated_empty_dark_square_intensity}")
+    # print(f"Sample empty light square (h1) avg intensity: {calibrated_empty_light_square_intensity}")
+
+
+    for r_idx in range(8): # 0 to 7, for rank 8 down to 1
+        fen_row_str = ""
+        empty_count = 0
+        for f_idx in range(8): # 0 to 7, for file 'a' to 'h'
+            y1, y2 = r_idx * square_size, (r_idx + 1) * square_size
+            x1, x2 = f_idx * square_size, (f_idx + 1) * square_size
+            square = warped_board[y1:y2, x1:x2]
+
+            # --- This is where sophisticated piece recognition would go ---
+            # For now, a very basic occupancy/color check
+            # Determine if this square SHOULD be light or dark based on its position
+            # (r_idx + f_idx) % 2 == 0 can determine square color if a1 is dark
+            # If a1 is light (standard), then (r_idx + f_idx) % 2 != 0 for a dark square
+            is_dark_square_position = (r_idx + f_idx) % 2 == 0 # Assuming a8 is dark
+            
+            # Pass the 'expected' empty intensity based on square color
+            # This is still very naive.
+            expected_empty_intensity = calibrated_empty_dark_square_intensity # Simplified
+            # A better way: have calibrated_empty_dark and calibrated_empty_light intensities
+            # if is_dark_square_position:
+            #     expected_empty_intensity = calibrated_empty_dark_square_intensity
+            # else:
+            #     expected_empty_intensity = calibrated_empty_light_square_intensity
+            
+            piece_char, piece_color = detect_piece_presence_and_color(square, expected_empty_intensity)
+            # --- End of placeholder recognition ---
+
+            if piece_char:
+                if empty_count > 0:
+                    fen_row_str += str(empty_count)
+                    empty_count = 0
+                
+                # This is where you'd map recognized piece type to FEN char
+                # For now, we only have 'P' or 'p'
+                actual_fen_char = piece_char # In a real system, this would be R, N, B, Q, K, P or r, n, b, q, k, p
+                fen_row_str += actual_fen_char
+                board_representation[r_idx][f_idx] = actual_fen_char
+            else:
+                empty_count += 1
+                board_representation[r_idx][f_idx] = '.' # For visualization
+
+        if empty_count > 0:
+            fen_row_str += str(empty_count)
+        fen_rows.append(fen_row_str)
+
+    # Print board representation for debugging
+    print("\nDetected Board State (Simplified):")
+    for r in range(8):
+        print(' '.join(board_representation[r]))
+
+    piece_placement_fen = "/".join(fen_rows)
+    return piece_placement_fen
+
+# --- Main ---
+if _name_ == "_main_":
+    # Create a dummy image file for testing if you don't have one
+    # e.g., download a picture of a chessboard setup
+    # I'll assume you have an image named 'chessboard.jpg' or 'chessboard.png'
+    # image_filename = "chessboard.jpg" # <<<< CHANGE THIS TO YOUR IMAGE
+    
+    # Find an image of a chessboard online, e.g., the starting position.
+    # https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Standard_chess_board_and_pieces.svg/800px-Standard_chess_board_and_pieces.svg.png
+    # Save it as 'chessboard_start.png' or similar
+    image_filename = "chessboard_start.png" 
+
+    if not os.path.exists(image_filename):
+        print(f"Please provide an image file named '{image_filename}' in the same directory.")
+        print("Or update the 'image_filename' variable in the script.")
+        exit()
+
+    # For a standard 8x8 board, the number of internal corners is 7x7.
+    # If your board has a thick border, findChessboardCorners might pick up
+    # external corners if you specify (9,9) etc.
+    fen_piece_part = image_to_fen_piece_placement(image_filename, board_pattern_size=(7, 7))
+
+    if fen_piece_part:
+        print(f"\nPiece Placement FEN: {fen_piece_part}")
+        # To get a full FEN, you'd append the other parts (often defaults for a static image analysis)
+        full_fen_approx = f"{fen_piece_part} w KQkq - 0 1" # Example defaults
+        print(f"Approximate Full FEN: {full_fen_approx}")
+
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
