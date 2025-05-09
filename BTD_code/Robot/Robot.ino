@@ -40,7 +40,7 @@ const int JOYSTICK_DEADZONE = 10;
 
 int baseAngle = 90;
 int shoulderAngle = 90;
-int elbowAngle = 90;
+int elbowAngle = 180;
 int wristVerAngle = 90;
 int wristRotAngle = 90;
 int gripperAngle = 73;
@@ -120,39 +120,34 @@ void loop() {
 
 void armController()
 {   
-  baseAngle += xValue * .3f;
-  baseAngle = constrain(baseAngle, 0, 180);
+    baseAngle += xValue * .3;
+    baseAngle = constrain(baseAngle, 0, 180);
 
-  shoulderAngle += yValue * .1f;
-  shoulderAngle = constrain(shoulderAngle, 0, 180);
+    shoulderAngle += yValue * .1;
+    wristVerAngle -= yValue * .1;
+    shoulderAngle = constrain(shoulderAngle, 0, 180);
+    wristVerAngle = constrain(wristVerAngle, 0, 180);
 
+    Serial.print("WRSIT: ");
+    Serial.print(wristVerAngle);
+    Serial.print(" - SHOULDER: " );
+    Serial.print(shoulderAngle);
 
-    Serial.println(shoulderAngle);
+    if (valueA) {
+      wristVerAngle += 5;
+    }
+    if (valueC) {
+      wristVerAngle -= 5;
+    }
 
-    // if (joystickShield.isRight()) {
-    //   baseAngle += 5;
-    //   Serial.println("Right");
-    // }   
-    // if (joystickShield.isLeft()) {
-    //   baseAngle -= 5;
-    //   Serial.println("Left");
-    // }
-    //  if (joystickShield.isUp()) {
-    //   shoulderAngle += 5;
-    //   Serial.println("Up");
-    // } //move gripper
-    // if (joystickShield.isDown()) {
-    //   shoulderAngle -= 5;
-    //   Serial.println("Down");
-    // }
-    // if (joystickShield.isUpButton()) {
-    //   elbowAngle += 5;
-    //   Serial.println("Up clicked");
-    // }
-    // if (joystickShield.isDownButton()) {
-    //   elbowAngle -= 5;
-    //   Serial.println("Down clicked");
-    // }
+    if (valueD) {
+      gripperAngle = 10;
+      //Serial.println("Up clicked");
+    }
+    if (valueB) {
+      gripperAngle = 73;
+      //Serial.println("Down clicked");
+    }
 
     
     // if (joystickShield.isRightButton()) {
