@@ -1,65 +1,318 @@
-import cv2
-import serial
+#!/usr/bin/python3
+
+# Copyright (c) 2022 Raspberry Pi Ltd
+# Author: Zanz2 <https://github.com/Zanz2>
+# SPDX-License-Identifier: BSD-3-Clause
+# Script îmbunătățit pentru instalarea automată a dependențelor
+
+import os
+import sys
+import subprocess
+import argparse
 import time
-# --- Detectare obiect albastru ---
-def detect_blue_object(frame):
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    # Interval pentru albastru (ajustează dacă e nevoie)
-    lower_blue = (100, 150, 50)
-    upper_blue = (140, 255, 255)
+def install_dependencies():
+    """Instalează toate dependențele necesare pentru rularea scriptului"""
+    print("Instalez dependențele necesare...")
+    
+    # Actualizăm pachetele și instalăm dependențele de sistem
+    subprocess.run(["sudo", "apt", "update"], check=True)
+    subprocess.run(["sudo", "apt", "install", "-y", "build-essential", "libatlas-base-dev", "python3-pip"], check=True)
+    
+    # Instalăm dependențele Python
+    subprocess.run([sys.executable, "-m", "pip", "install", "tflite-runtime"], check=True)
+    
+    # Încercăm să instalăm OpenCV - prima dată ca pachet de sistem
+    try:
+        subprocess.run(["sudo", "apt", "install", "-y", "python3-opencv"], check=True)
+    except subprocess.CalledProcessError:
+        # Dacă nu reușim, instalăm versiunea din pip
+        print("Instalez OpenCV din pip...")
+        subprocess.run([sys.executable, "-m", "pip", "install", "opencv-python-headless"], check=True)
+    
+    print("Toate dependențele au fost instalate cu succes!")
+    return True
 
-    mask = cv2.inRange(hsv, lower_blue, upper_blue)
-    contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+def check_dependencies():
+    """Verifică dacă toate dependențele sunt instalate și le instalează dacă lipsesc"""
+    missing_deps = []
+    
+    # Verificăm prezența OpenCV
+    try:
+        import cv2
+    except ImportError:
+        missing_deps.append("opencv")
+    
+    # Verificăm prezența TensorFlow Lite Runtime
+    try:
+        import tflite_runtime.interpreter
+    except ImportError:
+        missing_deps.append("tflite_runtime")
+    
+    # Verificăm prezența NumPy
+    try:
+        import numpy
+    except ImportError:
+        missing_deps.append("numpy")
+    
+    # Verificăm prezența Picamera2
+    try:
+        from picamera2 import Picamera2
+    except ImportError:
+        missing_deps.append("picamera2")
+    
+    if missing_deps:
+        print(f"Următoarele dependențe lipsesc: {', '.join(missing_deps)}")
+        choice = input("Doriți să le instalez acum? (d/n): ")
+        if choice.lower() in ['d', 'da', 'y', 'yes']:
+            install_dependencies()
+            print("Dependențele au fost instalate. Reporniți scriptul.")
+            sys.exit(0)
+        else:
+            print("Instalați dependențele manual și încercați din nou.")
+            sys.exit(1)
+    return True
 
-    if contours:
-        # Cel mai mare contur
-        c = max(contours, key=cv2.contourArea)
-        if cv2.contourArea(c) > 500:  # Elimină zgomot
-            M = cv2.moments(c)
-            if M["m00"] != 0:
-                cx = int(M["m10"] / M["m00"])
-                cy = int(M["m01"] / M["m00"])
-                return (cx, cy), mask, c
-    return None, mask, None
+# Verificăm și instalăm dependențele înainte de import
+if check_dependencies():
+    import cv2
+    import numpy as np
+    import tflite_runtime.interpreter as tflite
+    from picamera2 import MappedArray, Picamera2, Platform, Preview
 
-# --- Mapare coordonate cameră → braț robotic ---
-def map_to_arm_coords(x, y, image_shape):
-    img_h, img_w = image_shape[:2]
-    arm_x = int((x / img_w) * 180)  # Exemplu: scala între 0-180
-    arm_y = int((y / img_h) * 180)
-    return arm_x, arm_y
+# Dimensiunile pentru imagini
+normalSize = (1920, 1080)
+lowresSize = (640, 640)  # Dimensiunea cu care a fost antrenat modelul YOLOv5s
 
-# --- Main loop ---
-cap = cv2.VideoCapture(0)
+# Lista pentru dreptunghiurile detectate
+rectangles = []
 
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        continue
+# Variabile pentru calculul FPS
+start_time = time.time()
+frame_count = 0
+fps = 0
 
-    (coords, mask, contour) = detect_blue_object(frame)
+def ReadLabelFile(file_path):
+    """Citește fișierul cu etichete"""
+    try:
+        with open(file_path, 'r') as f:
+            lines = f.readlines()
+        ret = {}
+        
+        # Determinăm formatul fișierului
+        first_line = lines[0].strip()
+        has_index = len(first_line.split(maxsplit=1)) > 1 and first_line.split(maxsplit=1)[0].isdigit()
+        
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if has_index:
+                # Format "index label"
+                pair = line.split(maxsplit=1)
+                if len(pair) == 2:
+                    ret[int(pair[0])] = pair[1].strip()
+            else:
+                # Format doar cu etichete, adăugăm indecși implicit
+                ret[i] = line
+        
+        return ret
+    except FileNotFoundError:
+        print(f"Eroare: Fișierul de etichete '{file_path}' nu a fost găsit.")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Eroare la citirea fișierului de etichete: {str(e)}")
+        sys.exit(1)
 
-    if coords:
-        x, y = coords
-        # Desenează pe imagine
-        cv2.circle(frame, (x, y), 10, (255, 0, 0), -1)
-        cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
+def DrawRectangles(request):
+    """Desenează dreptunghiurile de detecție și informații FPS"""
+    global fps
+    
+    with MappedArray(request, "main") as m:
+        # Desenăm informații despre FPS
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        cv2.putText(m.array, f"FPS: {fps:.1f}", (50, 50), 
+                    font, 1, (0, 255, 0), 2, cv2.LINE_AA)
+        
+        # Desenăm dreptunghiurile detectate
+        for rect in rectangles:
+            xmin, ymin, xmax, ymax = rect[0:4]
 
-        # Mapează la coordonate ale brațului
-        arm_x, arm_y = map_to_arm_coords(x, y, frame.shape)
-        command = f"GRAB {arm_x} {arm_y}\n"
-        print(f"[TRIMITE] {command.strip()}")
-        arduino.write(command.encode())
+            rect_start = xmin, ymin
+            rect_end = xmax, ymax
+            cv2.rectangle(m.array, rect_start, rect_end, (0, 255, 0, 0))
+            if len(rect) == 5:
+                text = rect[4]
+                cv2.putText(m.array, text, (xmin, ymin - 10),
+                            font, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
-        time.sleep(3)  # Așteaptă să apuce obiectul
+def classFilter(classdata):
+    """Filtrează clasele pentru a obține cea mai probabilă pentru fiecare detecție"""
+    return [c.argmax() for c in classdata]
 
-    # Afișare
-    cv2.imshow("Camera", frame)
-    cv2.imshow("Masca Albastru", mask)
+def YOLOdetect(output_data):
+    """Procesează ieșirea modelului YOLO"""
+    output_data = output_data[0]                # x(1, 25200, 7) la x(25200, 7)
+    boxes = np.squeeze(output_data[..., :4])    # cutii [25200, 4]
+    scores = np.squeeze(output_data[..., 4:5])  # încredere [25200, 1]
+    classes = classFilter(output_data[..., 5:])  # obține clasele
+    
+    # Convertim cutiile din format [x, y, w, h] în [x1, y1, x2, y2]
+    x, y, w, h = boxes[..., 0], boxes[..., 1], boxes[..., 2], boxes[..., 3]  # xywh
+    xyxy = [x - w / 2, y - h / 2, x + w / 2, y + h / 2]  # xywh la xyxy
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+    return xyxy, classes, scores
 
-cap.release()
-cv2.destroyAllWindows()
+def download_model_files():
+    """Descarcă fișierele model și etichetele dacă nu există"""
+    models_dir = os.path.expanduser("~/models")
+    os.makedirs(models_dir, exist_ok=True)
+    
+    model_path = os.path.join(models_dir, "yolov5s-fp16.tflite")
+    labels_path = os.path.join(models_dir, "coco_labels_yolov5.txt")
+    
+    if not os.path.exists(model_path):
+        print(f"Descarc modelul YOLOv5s în {model_path}...")
+        subprocess.run([
+            "wget", "-O", model_path,
+            "https://github.com/ultralytics/yolov5/releases/download/v6.0/yolov5s-fp16.tflite"
+        ], check=True)
+    
+    if not os.path.exists(labels_path):
+        print(f"Descarc etichetele COCO în {labels_path}...")
+        subprocess.run([
+            "wget", "-O", labels_path,
+            "https://raw.githubusercontent.com/ultralytics/yolov5/master/data/coco.names"
+        ], check=True)
+    
+    return model_path, labels_path
+
+def main():
+    global rectangles, start_time, frame_count, fps
+    
+    parser = argparse.ArgumentParser(description="Detecție obiecte YOLOv5 cu TensorFlow Lite pe Raspberry Pi")
+    parser.add_argument('--model', help='Calea către modelul de detecție')
+    parser.add_argument('--label', help='Calea către fișierul de etichete')
+    parser.add_argument('--threshold', type=float, default=0.4, help='Prag de detecție (0.0-1.0)')
+    parser.add_argument('--download', action='store_true', help='Descarcă automat modelul și etichetele')
+    args = parser.parse_args()
+    
+    if args.download or (not args.model and not args.label):
+        model_path, labels_path = download_model_files()
+        args.model = model_path
+        args.label = labels_path
+    
+    # Verificăm dacă fișierul model există
+    if not os.path.exists(args.model):
+        print(f"Eroare: Fișierul model '{args.model}' nu a fost găsit.")
+        sys.exit(1)
+
+    if args.label:
+        labels = ReadLabelFile(args.label)
+    else:
+        labels = None
+        
+    try:
+        picam2 = Picamera2()
+        picam2.start_preview(Preview.QTGL)
+    except Exception as e:
+        print(f"Eroare la inițializarea camerei: {str(e)}")
+        print("Asigurați-vă că camera este conectată și activată în raspi-config")
+        sys.exit(1)
+
+    # Configurăm formatul de stream în funcție de platforma Raspberry Pi
+    stream_format = "YUV420"
+    if hasattr(Picamera2, 'platform') and Picamera2.platform == Platform.PISP:
+        stream_format = "RGB888"
+
+    # Configurăm camera
+    config = picam2.create_preview_configuration(
+        main={"size": normalSize},
+        lores={"size": lowresSize, "format": stream_format}
+    )
+    picam2.configure(config)
+    picam2.post_callback = DrawRectangles
+
+    print("Pornesc camera...")
+    picam2.start()
+    
+    print(f"Încarc modelul TensorFlow Lite: {args.model}")
+    try:
+        interpreter = tflite.Interpreter(model_path=args.model, num_threads=4)
+        interpreter.allocate_tensors()
+    except Exception as e:
+        print(f"Eroare la încărcarea modelului: {str(e)}")
+        sys.exit(1)
+
+    print("Detecția obiectelor rulează. Apăsați Ctrl+C pentru a ieși.")
+    
+    try:
+        while True:
+            frame_start_time = time.time()
+            
+            # Capturăm un frame de la cameră
+            img = picam2.capture_array("lores")
+
+            # Obținem detaliile de input și output ale modelului
+            input_details = interpreter.get_input_details()
+            output_details = interpreter.get_output_details()
+            height = input_details[0]['shape'][1]
+            width = input_details[0]['shape'][2]
+
+            # Verificăm dacă modelul este floating point
+            floating_model = False
+            if input_details[0]['dtype'] == np.float32:
+                floating_model = True
+
+            # Convertim formatul imaginii dacă este necesar
+            if stream_format == "YUV420":
+                img = cv2.cvtColor(img, cv2.COLOR_YUV420p2RGB)
+
+            # Redimensionăm imaginea dacă e nevoie
+            new_shape = (width, height)
+            if new_shape != lowresSize:
+                img = cv2.resize(img, new_shape)
+
+            # Preprocesăm imaginea pentru model
+            input_data = np.expand_dims(img, axis=0)
+            if floating_model:
+                input_data = (np.float32(input_data) - 127.5) / 127.5
+
+            # Executăm inferența
+            interpreter.set_tensor(input_details[0]['index'], input_data)
+            interpreter.invoke()
+            output_data = interpreter.get_tensor(output_details[0]['index'])
+            
+            # Procesăm rezultatele
+            xyxy, classes, scores = YOLOdetect(output_data)
+            rectangles = []
+
+            # Filtrăm detecțiile după scorul de încredere
+            for i in range(len(scores)):
+                if ((scores[i] > args.threshold) and (scores[i] <= 1.0)):
+                    xmin = int(max(1, (xyxy[0][i] * normalSize[0])))
+                    ymin = int(max(1, (xyxy[1][i] * normalSize[1])))
+                    xmax = int(min(normalSize[0], (xyxy[2][i] * normalSize[0])))
+                    ymax = int(min(normalSize[1], (xyxy[3][i] * normalSize[1])))
+
+                    box = [xmin, ymin, xmax, ymax]
+                    rectangles.append(box)
+                    if labels and classes[i] < len(labels):
+                        rectangles[-1].append(labels[classes[i]])
+            
+            # Calculăm FPS
+            frame_count += 1
+            if frame_count >= 10:
+                end_time = time.time()
+                fps = frame_count / (end_time - start_time)
+                frame_count = 0
+                start_time = time.time()
+                
+    except KeyboardInterrupt:
+        print("\nÎnchid aplicația...")
+    except Exception as e:
+        print(f"Eroare: {str(e)}")
+    finally:
+        picam2.stop()
+        print("Camera oprită.")
+
+if __name__ == '__main__':
+    main()

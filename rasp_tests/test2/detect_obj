@@ -1,0 +1,137 @@
+import cv2
+import numpy as np
+from picamera2 import Picamera2
+import serial
+import time
+
+# --- Configurare Cameră (picamera2) ---
+try:
+    print("Inițializare Picamera2...")
+    picam2 = Picamera2()
+    config = picam2.create_preview_configuration(main={"size": (640, 480), "format": 'XRGB8888'})
+    picam2.configure(config)
+    picam2.start()
+    print("Picamera2 pornită.")
+    time.sleep(1)
+except Exception as e:
+    print(f"EROARE la inițializarea Picamera2: {e}")
+    exit()
+
+# --- Configurare Comunicare Serială cu Arduino ---
+SERIAL_PORT = '/dev/ttyACM0' # Schimbă dacă este necesar!
+BAUD_RATE = 9600
+arduino = None # Inițializare cu None
+try:
+    print(f"Conectare la Arduino pe portul {SERIAL_PORT} la {BAUD_RATE} baud...")
+    arduino = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+    time.sleep(2)
+    print("Conectat la Arduino.")
+except serial.SerialException as e:
+    print(f"EROARE la conectarea cu Arduino: {e}")
+    print("Scriptul va continua fără control Arduino.")
+
+
+def send_command_to_arduino(command_str):
+    if arduino and arduino.is_open:
+        try:
+            print(f"Trimit comanda: {command_str}")
+            arduino.write(command_str.encode('utf-8'))
+            arduino.flush()
+        except Exception as e:
+            print(f"EROARE la trimiterea comenzii către Arduino: {e}")
+    else:
+        print(f"DEBUG: Arduino nu este conectat. Comanda ar fi fost: '{command_str.strip()}'")
+
+# --- VALORI HSV PENTRU VERDE (ÎNLOCUIEȘTE CU CELE CALIBRATE DE TINE!) ---
+LOWER_GREEN_H = 40   # Exemplu: Nuanța inferioară (CALIBREAZĂ!)
+LOWER_GREEN_S = 50   # Exemplu: Saturație minimă (CALIBREAZĂ!)
+LOWER_GREEN_V = 50   # Exemplu: Valoare/Luminozitate minimă (CALIBREAZĂ!)
+
+UPPER_GREEN_H = 80   # Exemplu: Nuanța superioară (CALIBREAZĂ!)
+UPPER_GREEN_S = 255  # Saturație maximă
+UPPER_GREEN_V = 255  # Valoare/Luminozitate maximă
+
+# Creare array-uri NumPy din valorile de mai sus
+lower_green = np.array([LOWER_GREEN_H, LOWER_GREEN_S, LOWER_GREEN_V])
+upper_green = np.array([UPPER_GREEN_H, UPPER_GREEN_S, UPPER_GREEN_V])
+
+MIN_CONTOUR_AREA = 500 # Aria minimă a conturului pentru a fi considerat un obiect valid
+
+print("Pornire buclă principală de procesare...")
+try:
+    while True:
+        frame_rgba = picam2.capture_array("main")
+        frame_rgb = cv2.cvtColor(frame_rgba, cv2.COLOR_RGBA2RGB)
+        frame_bgr = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
+        
+        hsv = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2HSV)
+
+        # Creează masca pentru verde
+        final_mask = cv2.inRange(hsv, lower_green, upper_green)
+        
+        # Opțional: Operații morfologice pentru a curăța masca
+        kernel = np.ones((5,5),np.uint8)
+        final_mask_processed = cv2.morphologyEx(final_mask, cv2.MORPH_OPEN, kernel)
+        final_mask_processed = cv2.morphologyEx(final_mask_processed, cv2.MORPH_CLOSE, kernel)
+        
+        contours, _ = cv2.findContours(final_mask_processed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        object_detected_this_frame = False
+        if contours:
+            largest_contour = max(contours, key=cv2.contourArea)
+            area = cv2.contourArea(largest_contour)
+
+            if area > MIN_CONTOUR_AREA:
+                object_detected_this_frame = True
+                M = cv2.moments(largest_contour)
+                if M["m00"] != 0:
+                    center_x = int(M["m10"] / M["m00"])
+                    center_y = int(M["m01"] / M["m00"])
+
+                    cv2.circle(frame_bgr, (center_x, center_y), 7, (255, 0, 255), 2) # Mov pentru detecție verde
+                    cv2.putText(frame_bgr, f"Verde ({center_x},{center_y})", (center_x - 50, center_y - 20),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 2) # Text negru
+                    cv2.drawContours(frame_bgr, [largest_contour], -1, (0, 255, 0), 2) # Contur verde
+
+                    # --- Logică pentru a comanda brațul robotic (adaptată) ---
+                    frame_width = frame_bgr.shape[1]
+                    command = "ASTEAPTA" 
+                    if center_x < frame_width / 3:
+                        command = "STANGA"
+                    elif center_x > frame_width * 2 / 3:
+                        command = "DREAPTA"
+                    else: 
+                        command = "PRINDE_VERDE" # Comandă specifică
+                    
+                    send_command_to_arduino(command + "\n")
+                    time.sleep(0.5)
+
+        if not object_detected_this_frame:
+             send_command_to_arduino("ASTEAPTA\n") 
+             time.sleep(0.1)
+
+
+        cv2.imshow("Camera (Detectie Verde)", frame_bgr)
+        cv2.imshow("Masca Verde Finala", final_mask_processed)
+
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q'):
+            print("Tasta 'q' apăsată. Oprire...")
+            send_command_to_arduino("STOP\n")
+            break
+
+except KeyboardInterrupt:
+    print("Program întrerupt de la tastatură (Ctrl+C).")
+    send_command_to_arduino("STOP_EMERGENTA\n")
+except Exception as e:
+    print(f"A apărut o eroare neașteptată: {e}")
+finally:
+    print("Eliberare resurse...")
+    if 'picam2' in locals() and picam2.started:
+        picam2.stop()
+        print("Picamera2 oprită.")
+    if arduino and arduino.is_open:
+        arduino.close()
+        print("Conexiune Arduino închisă.")
+    cv2.destroyAllWindows()
+    print("Ferestre distruse. Program încheiat.")
