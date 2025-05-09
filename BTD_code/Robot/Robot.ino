@@ -120,18 +120,27 @@ void loop() {
 
 void armController()
 {   
-    baseAngle += xValue * .3;
+    baseAngle += xValue * .1;
     baseAngle = constrain(baseAngle, 0, 180);
 
     shoulderAngle += yValue * .1;
-    wristVerAngle -= yValue * .1;
-    shoulderAngle = constrain(shoulderAngle, 0, 180);
-    wristVerAngle = constrain(wristVerAngle, 0, 180);
 
+
+    if (shoulderAngle < 160)
+    {
+      wristVerAngle = 192 - shoulderAngle;
+      wristVerAngle = constrain(wristVerAngle, 0, 180);
+    }
+ 
+    
+    
+    shoulderAngle = constrain(shoulderAngle, 0, 180);
+   
     Serial.print("WRSIT: ");
     Serial.print(wristVerAngle);
     Serial.print(" - SHOULDER: " );
     Serial.print(shoulderAngle);
+    Serial.println();
 
     if (valueA) {
       wristVerAngle += 5;
