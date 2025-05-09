@@ -1,28 +1,6 @@
-/*
-  simpleMovements.ino
-
- This  sketch simpleMovements shows how they move each servo motor of Braccio
-
- Created on 18 Nov 2015
- by Andrea Martino
-
- This example is in the public domain.
- */
-
 #include <Braccio.h>
 #include <Servo.h>
 #include <Arduino.h>
-
-Servo base;
-Servo shoulder;
-Servo elbow;
-Servo wrist_rot;
-Servo wrist_ver;
-Servo gripper;
-
-const int GripPressed = 2;
-const int xAxisMovement = 0;
-const int yAxisMovement = 1;
 
 #define X A0
 #define Y A1
@@ -32,18 +10,24 @@ const int yAxisMovement = 1;
 #define D 7
 #define E 0
 #define F 1
+#define idleTimer 2000
+#define JOYSTICK_CENTER 512
 
-const int JOYSTICK_MIN = 0;
-const int JOYSTICK_MAX = 1024;
-const int JOYSTICK_CENTER = 512;
-const int JOYSTICK_DEADZONE = 10;
+Servo base;
+Servo shoulder;
+Servo elbow;
+Servo wrist_rot;
+Servo wrist_ver;
+Servo gripper;
 
-int baseAngle = 90;
-int shoulderAngle = 90;
-int elbowAngle = 180;
-int wristVerAngle = 90;
-int wristRotAngle = 90;
-int gripperAngle = 73;
+bool isIdle = false;
+int previousMillis = 0;
+int baseAngle_idle = 0;
+int shoulderAngle_idle = 0;
+int elbowAngle_idle = 180;
+int wristVerAngle_idle = 90;
+int wristRotAngle_idle = 90;
+int gripperAngle_idle = 73;
 
 bool isGrabbing = false;
 bool isJoystickBtnPressed = false;
@@ -59,14 +43,6 @@ int valueE;
 int valueF;
 
 void setup() {
-  //Initialization functions and set up the initial position for Braccio
-  //All the servo motors will be positioned in the "safety" position:
-  //Base (M1):90 degrees
-  //Shoulder (M2): 45 degrees
-  //Elbow (M3): 180 degrees
-  //Wrist vertical (M4): 180 degrees
-  //Wrist rotation (M5): 90 degrees
-  //gripper (M6): 10 degrees
   Serial.begin(9600);
 
   pinMode(A, INPUT_PULLUP);
@@ -76,74 +52,60 @@ void setup() {
   pinMode(E, INPUT_PULLUP);
   pinMode(F, INPUT_PULLUP);
 
-  delay(1000);
-  
   Braccio.begin();
+  idle();
 }
 
 void loop() {
-   /*
-   Step Delay: a milliseconds delay between the movement of each servo.  Allowed values from 10 to 30 msec.
-   M1=base degrees. Allowed values from 0 to 180 degrees
-   M2=shoulder degrees. Allowed values from 15 to 165 degrees
-   M3=elbow degrees. Allowed values from 0 to 180 degrees
-   M4=wrist vertical degrees. Allowed values from 0 to 180 degrees
-   M5=wrist rotation degrees. Allowed values from 0 to 180 degrees
-   M6=gripper degrees. Allowed values from 10 to 73 degrees. 10: the toungue is open, 73: the gripper is closed.
-  */
-  
-                       //(step delay, M1, M2, M3, M4, M5, M6);
-
-
-
-  // Braccio.ServoMovement(10, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
-  // Braccio.ServoMovement(20,           0,  15, 180, 170, 0,  73);  
 
   joystickConfig(X, Y);
-  armController(); 
 
-  Braccio.ServoMovement((110-xValue), baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
+  if (!digitalRead(A)) {
 
-  // delay(10);
+    long currentMillis = millis();
+    if(currentMillis - previousMillis > idleTimer)
+     {
+       isIdle = true;
+       idle();
+       Serial.println("Idle called");
+       previousMillis = currentMillis;
+
+     }
+    }
+
+    if(isIdle)
+    {
+      idle();
+      isIdle = false;
+    }
+    else
+    {
+      armController(); 
+      Braccio.ServoMovement((110-sqrt(pow(xValue, 2))), baseAngle_idle, shoulderAngle_idle, elbowAngle_idle, wristVerAngle_idle, wristRotAngle_idle, gripperAngle_idle);
+    }
 }
 
 void armController()
 {   
-    baseAngle += xValue * .1;
-    baseAngle = constrain(baseAngle, 0, 180);
+  baseAngle_idle += xValue * .1;
+  baseAngle_idle = constrain(baseAngle_idle, 0, 180);
+  shoulderAngle_idle += yValue * .1;
+  if (shoulderAngle_idle < 160)
+  {
+    wristVerAngle_idle = 192 - shoulderAngle_idle;
+    wristVerAngle_idle = constrain(wristVerAngle_idle, 0, 180);
+  }
 
-    shoulderAngle += yValue * .1;
-
-
-    if (shoulderAngle < 160)
-    {
-      wristVerAngle = 192 - shoulderAngle;
-      wristVerAngle = constrain(wristVerAngle, 0, 180);
-    }
- 
-    shoulderAngle = constrain(shoulderAngle, 0, 180);
-   
-    Serial.print("WRSIT: ");
-    Serial.print(wristVerAngle);
-    Serial.print(" - SHOULDER: " );
-    Serial.print(shoulderAngle);
-    Serial.println();
-
-    // if (valueA) {
-    //   //Idle pos
-    // }
-    // if (valueC) {
-      
-    // }
-
-    if (valueD) {
-      gripperAngle = 10;
-      //Serial.println("Up clicked");
-    }
-    if (valueB) {
-      gripperAngle = 73;
-      //Serial.println("Down clicked");
-    }
+  shoulderAngle_idle = constrain(shoulderAngle_idle, 0, 180);
+  
+  if (valueD) {
+    gripperAngle_idle = 10;
+    //Serial.println("Up clicked");
+  }
+  if (valueB) {
+    gripperAngle_idle = 73;
+    //Serial.println("Down clicked");
+  }
 }
 
 void joystickConfig(int xAxis, int yAxis)
@@ -162,9 +124,7 @@ void joystickConfig(int xAxis, int yAxis)
   {
     yValue = 0;
   }
-  
-  // intmappedX = mapJoystickValue(1024 - xValue);
-  // intmappedY = mapJoystickValue(yValue);
+
   valueA = !digitalRead(A);
   valueB = !digitalRead(B);
   valueC = !digitalRead(C);
@@ -172,22 +132,6 @@ void joystickConfig(int xAxis, int yAxis)
   valueE = !digitalRead(E);
   valueF = !digitalRead(F);
 
-  // Serial.print("MOV: ");
-  // Serial.print(xValue);
-  // Serial.print(" ; ");
-  // Serial.println(yValue);
-  // Serial.print("- A: ");
-  // Serial.print(valueA);
-  // Serial.print("- B: ");
-  // Serial.print(valueB);
-  // Serial.print("- C: ");
-  // Serial.print(valueC);
-  // Serial.print("- D: ");
-  // Serial.print(valueD);
-  // Serial.print("- E: ");
-  // Serial.print(valueE);
-  // Serial.print("- F: ");
-  // Serial.println(valueF);
 }
 
 // Normalize joystick values to -1 to 1 range
@@ -195,9 +139,14 @@ int mapToRange(int value) {
     return (int)((float)(value - JOYSTICK_CENTER) / (JOYSTICK_CENTER) * 100);
 }
 
-// int mapJoystickValue(int value) {
-//   // Map the joystick's 0-4095 range to -32768 to 32767
-//   return map(value, JOYSTICK_MIN, JOYSTICK_MAX, 0, 180);
-// }
+void idle()
+{
+  baseAngle_idle = 0;
+  shoulderAngle_idle = 0;
+  elbowAngle_idle = 180;
+  wristVerAngle_idle = 180;
+  wristRotAngle_idle = 90;
+  gripperAngle_idle = 73;
 
-
+  Braccio.ServoMovement(60, 0, 0, 180, 180, 90, 73);
+}
