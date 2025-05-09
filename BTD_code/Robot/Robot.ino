@@ -48,6 +48,16 @@ int gripperAngle = 73;
 bool isGrabbing = false;
 bool isJoystickBtnPressed = false;
 
+int xValue;
+int yValue;
+
+int valueA;
+int valueB;
+int valueC;
+int valueD;
+int valueE;
+int valueF;
+
 void setup() {
   //Initialization functions and set up the initial position for Braccio
   //All the servo motors will be positioned in the "safety" position:
@@ -67,7 +77,6 @@ void setup() {
   pinMode(F, INPUT_PULLUP);
 
   delay(1000);
-
   
   Braccio.begin();
 }
@@ -92,17 +101,26 @@ void loop() {
 
   //Wait 1 second
   joystickConfig(X, Y);
-  //joystickInputs(GripPressed);
   armController(); 
 
-  Braccio.ServoMovement(50, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
+  
+  if(xValue != 0)
+  {
+    Braccio.ServoMovement(101 / (xValue+1) + 30, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
+  }
+  else
+  {
+    Braccio.ServoMovement(50, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
+  }
 
   //Wait 1 second
-  delay(50);
+  delay(25);
 }
 
 void armController()
 {   
+    baseAngle += xValue * .3f;
+
     // if (joystickShield.isRight()) {
     //   baseAngle += 5;
     //   Serial.println("Right");
@@ -165,23 +183,34 @@ void armController()
 
 void joystickConfig(int xAxis, int yAxis)
 {
-  int xValue = analogRead(xAxis);
-  int yValue = analogRead(yAxis);
+  xValue = analogRead(xAxis);
+  yValue = analogRead(yAxis);
+  xValue = mapToRange(xValue);
+  yValue = mapToRange(yValue);
 
-  int mappedX = mapJoystickValue(1024 - xValue);
-  int mappedY = mapJoystickValue(yValue);
+  if (xValue >= -5 && xValue <= 5)
+  {
+    xValue = 0;
+  }
 
-  int valueA = digitalRead(A);
-  int valueB = digitalRead(B);
-  int valueC = digitalRead(C);
-  int valueD = digitalRead(D);
-  int valueE = digitalRead(E);
-  int valueF = digitalRead(F);
+  if (yValue >= -5 && yValue <= 5)
+  {
+    yValue = 0;
+  }
+  
+  // intmappedX = mapJoystickValue(1024 - xValue);
+  // intmappedY = mapJoystickValue(yValue);
+  valueA = !digitalRead(A);
+  valueB = !digitalRead(B);
+  valueC = !digitalRead(C);
+  valueD = !digitalRead(D);
+  valueE = !digitalRead(E);
+  valueF = !digitalRead(F);
 
   Serial.print("MOV: ");
-  Serial.print(mapToRange(xValue));
-  Serial.print("-");
-  Serial.print(mapToRange(yValue));
+  Serial.print(xValue);
+  Serial.print(" ; ");
+  Serial.print(yValue);
   Serial.print("- A: ");
   Serial.print(valueA);
   Serial.print("- B: ");
@@ -201,9 +230,9 @@ int mapToRange(int value) {
     return (int)((float)(value - JOYSTICK_CENTER) / (JOYSTICK_CENTER) * 100);
 }
 
-int mapJoystickValue(int value) {
-  // Map the joystick's 0-4095 range to -32768 to 32767
-  return map(value, JOYSTICK_MIN, JOYSTICK_MAX, 0, 180);
-}
+// int mapJoystickValue(int value) {
+//   // Map the joystick's 0-4095 range to -32768 to 32767
+//   return map(value, JOYSTICK_MIN, JOYSTICK_MAX, 0, 180);
+// }
 
 
