@@ -2,7 +2,7 @@
   {
     "color": "yellow",
     "id": 1,
-    "stock": 20,
+    "stock": 0,
     "name": "Yellow CUB",
     "description": "Safe, durable, and made with sustainable practices",
     "image": "/yellow.jpg",

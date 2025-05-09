@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import { isCubeInStock } from "../utils";
 
 export const useCart = ()=>{
   const [cart, setCart] = useState([]);
@@ -26,24 +27,44 @@ export const useCart = ()=>{
   
       if (existingCube) {
         // Update quantity for the existing cube
-        return prev.map((item) =>
-          item.cube_id === id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+        return prev.map((item) => {
+            if(item.cube_id === id){
+              if(isCubeInStock(id, item.quantity)){
+                return { ...item, quantity: item.quantity + 1 }
+              }else{
+                return item;
+              }
+            }
+            else{
+              return item;
+            }
+          }
         );
       } else {
         // Add new cube to cart
-        return [...prev, { cube_id: id, quantity: 1, price_unit: price_unit }];
+        if(isCubeInStock(id, 1)){
+          return [...prev, { cube_id: id, quantity: 1, price_unit: price_unit }];
+        }else{
+          return [...prev];
+        }
       }
     });
   }
 
   function increaseQuantity(id){
     setCart((prev)=>
-      prev.map((item) =>
-        item.cube_id === id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
+      prev.map((item) =>{
+        if(item.cube_id === id){
+          if(isCubeInStock(id, item.quantity)){
+            return { ...item, quantity: item.quantity + 1 }
+          }else{
+            return item;
+          }
+        }
+        else{
+          return item;
+        }
+      }
     ))
   }
 
