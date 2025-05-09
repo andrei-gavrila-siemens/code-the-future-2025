@@ -1,12 +1,6 @@
 import CubCard from "@/components/CubCard";
 import Link from "next/link";
-
-
-// const cuburi = [
-//   {
-//     'name
-//   }
-// ]
+import cubes from "@/db/cuburi.json"
 
 export default function Home() {
   return (
@@ -16,9 +10,9 @@ export default function Home() {
       
       <p className="text-center mt-8 mb-4 text-xl">Our Most Wanted Products</p>
       <div className="flex flex-col md:grid md:grid-cols-2 xl:grid-cols-3 gap-5">
-        <CubCard />
-        <CubCard />
-        <CubCard />
+        {cubes.map((cube, index)=>
+          <CubCard cube={cube} key={index}/>
+        )}
       </div>
       <Link href="/products" className="self-center mt-4 hover:underline">See more ...</Link>
     </div>

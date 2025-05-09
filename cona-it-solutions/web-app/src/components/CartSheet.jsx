@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { Button } from './ui/button'
 import { ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
+import cubes from "@/db/cuburi.json"
 
 export default function CartSheet() {
   const [side, setSide] = useState("top");
@@ -45,9 +46,9 @@ export default function CartSheet() {
         </SheetHeader>
         <div className="px-4 pb-4">
           <div className='flex flex-col my-8'>
-            <CubCart />
-            <CubCart />
-            <CubCart />
+            {cubes.map((cube, index)=>
+              <CubCart cube={cube} key={index}/>
+            )}
           </div>
           <p className='mb-8 text-xl'>Your order total is: <span className='font-bold'>30.00 lei</span></p>
           <SheetClose asChild>

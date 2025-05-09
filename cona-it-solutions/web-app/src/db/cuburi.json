@@ -1,0 +1,38 @@
+[
+  {
+    "color": "yellow",
+    "id": 1,
+    "stock": 20,
+    "name": "Yellow CUB",
+    "description": "Safe, durable, and made with sustainable practices",
+    "image": "/yellow.jpg",
+    "price": 10
+  },
+  {
+    "color": "blue",
+    "id": 2,
+    "stock": 2,
+    "name": "Blue CUB",
+    "description": "Safe, durable, and made with sustainable practices",
+    "image": "/blue.jpg",
+    "price": 10
+  },
+  {
+    "color": "red",
+    "id": 3,
+    "stock": 25,
+    "name": "Red CUB",
+    "description": "Safe, durable, and made with sustainable practices",
+    "image": "/red.jpg",
+    "price": 10
+  },
+  {
+    "color": "orange",
+    "id": 4,
+    "stock": 40,
+    "name": "Orange CUB",
+    "description": "Safe, durable, and made with sustainable practices",
+    "image": "/orange.jpg",
+    "price": 10
+  }
+]
