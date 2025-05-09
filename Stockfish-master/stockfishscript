@@ -1,0 +1,28 @@
+from stockfish import Stockfish
+import serial
+import time
+
+# Inițializează Stockfish
+stockfish = Stockfish("/usr/games/stockfish")
+stockfish.set_fen_position("startpos")  # Poziția inițială
+
+# Inițializează comunicarea serială cu Arduino
+arduino = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+time.sleep(2)  # Așteaptă conectarea
+
+def trimite_comanda_arduino(comanda):
+    arduino.write((comanda + '\n').encode('utf-8'))
+    print(f"Trimis: {comanda}")
+
+# Obține cea mai bună mutare
+mutare = stockfish.get_best_move()
+print(f"Mutarea aleasă de Stockfish: {mutare}")
+
+# Trimitere exemplificativă către Arduino
+if mutare == "e2e4":
+    trimite_comanda_arduino("MOVE_E2_E4")
+elif mutare == "g1f3":
+    trimite_comanda_arduino("MOVE_G1_F3")
+# adaugă și alte mutări relevante
+
+arduino.close()
