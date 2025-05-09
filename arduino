@@ -1,0 +1,32 @@
+#include <Braccio.h>
+#include <Servo.h>
+
+Servo base, shoulder, elbow, wrist_ver, wrist_rot, gripper;
+
+void setup() {
+  Serial.begin(9600);
+  Braccio.begin();
+  Braccio.ServoMovement(20, 90, 90, 90, 90, 90, 10);  // poz initiala
+}
+
+void loop() {
+  if (Serial.available()) {
+    String comanda = Serial.readStringUntil('\n');
+
+    if (comanda.startsWith("MOVE:")) {
+      // Extrag coordonatele
+      int index = comanda.indexOf(":");
+      String coord = comanda.substring(index + 1);
+      int vir = coord.indexOf(",");
+      int x = coord.substring(0, vir).toInt();
+      int y = coord.substring(vir + 1).toInt();
+
+      // traaduc coordonatele în unghiuri servo (simplificat)
+      int baseAngle = map(x, 0, 640, 0, 180);
+      int shoulderAngle = map(y, 0, 480, 45, 135);
+
+      // miscare
+      Braccio.ServoMovement(20, baseAngle, shoulderAngle, 90, 90, 90, 10);
+    }
+  }
+}
