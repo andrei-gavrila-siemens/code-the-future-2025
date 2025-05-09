@@ -1,9 +1,24 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export const useCart = ()=>{
   const [cart, setCart] = useState([]);
+  const [total, setTotal] = useState(0);
+
+  useEffect(()=>{
+    setTotal(()=>{
+      let newTotal = 0;
+      console.log(cart);
+      for(const cartItem of cart){
+        console.log(cartItem);
+        newTotal += cartItem.price_unit * cartItem.quantity;
+      }
+      
+      console.log(newTotal);
+      return newTotal;
+    })
+  }, [cart])
 
   function addToCart(id, price_unit) {
     setCart((prev) => {
@@ -33,13 +48,25 @@ export const useCart = ()=>{
   }
 
   function decrementQuanity(id){
+    let deleteItem = false;
     setCart((prev)=>
-      prev.map((item) =>
-        item.cube_id === id
-          ? { ...item, quantity: item.quantity - 1 }
-          : item
+      prev.map((item) => {
+        if(item.cube_id === id){
+          if(item.quantity - 1 === 0){
+            deleteItem = true;
+          }
+          return { ...item, quantity: item.quantity - 1 }
+        }else{
+          return item
+        }
+      }
     ))
+    if(deleteItem){
+      setCart((prev)=>
+        prev.filter(item => item.cube_id != id)
+      );
+    }
   }
 
-  return {cart, setCart, addToCart, increaseQuantity, decrementQuanity};
+  return {cart, total, setCart, addToCart, increaseQuantity, decrementQuanity};
 }

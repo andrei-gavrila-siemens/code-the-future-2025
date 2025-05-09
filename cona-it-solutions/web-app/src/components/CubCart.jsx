@@ -1,9 +1,22 @@
+'use client';
+
 import Image from 'next/image'
-import React from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Button } from './ui/button'
 import Link from 'next/link'
+import { CartContext } from '@/lib/context/cart'
 
 export default function CubCart({cube}) {
+
+  const {cart, increaseQuantity, decrementQuanity} = useContext(CartContext);
+  const [cubeCartItem, setCubeCartItem] = useState({});
+
+  useEffect(()=>{
+    setCubeCartItem(()=>
+      cart.find(cartItem => cartItem.cube_id == cube.id)
+    );
+  }, [cart])
+
   return (
     <div className='border-t border-b flex justify-between items-center'>
       <Link className='flex items-center' href="/products/1">
@@ -11,11 +24,11 @@ export default function CubCart({cube}) {
         <p>{cube.name}</p>
       </Link>
       <div className='flex flex-col items-center'>
-        <p>{cube.price.toFixed(2)} lei</p>
+        <p>{(cube.price * cubeCartItem.quantity).toFixed(2)} lei</p>
         <div className='flex gap-4 items-center'>
-          <Button variant="secondary" size="icon">-</Button>
-          <p>1</p>
-          <Button size="icon">+</Button>
+          <Button variant="secondary" size="icon" onClick={()=>{decrementQuanity(cube.id)}}>-</Button>
+          <p>{cubeCartItem.quantity}</p>
+          <Button size="icon" onClick={()=>{increaseQuantity(cube.id)}}>+</Button>
         </div>
       </div>
     </div>

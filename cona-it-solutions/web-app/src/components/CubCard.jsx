@@ -1,4 +1,6 @@
-import React from 'react'
+'use client';
+
+import React, { useContext } from 'react'
 import {
   Card,
   CardContent,
@@ -10,8 +12,12 @@ import {
 import { Button } from './ui/button'
 import Image from 'next/image'
 import Link from 'next/link'
+import { CartContext } from '@/lib/context/cart'
 
 export default function CubCard({cube}) {
+
+  const cart = useContext(CartContext);
+
   return (
     <Card>
       <CardHeader>
@@ -22,7 +28,7 @@ export default function CubCard({cube}) {
         <Image src={cube.image} width={1080} height={1080} alt='cube image' className='w-full'/>
       </CardContent>
       <CardFooter className="flex gap-4">
-        <Button>Add to cart</Button>
+        <Button onClick={()=>{cart.addToCart(cube.id, cube.price)}}>Add to cart</Button>
         <Link href={`/products/${cube.id}`}>
           <Button variant="secondary">View Product</Button>
         </Link>
