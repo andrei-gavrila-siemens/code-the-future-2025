@@ -2,6 +2,8 @@ import pygame
 import math
 import numpy as np
 import random
+import json
+import os
 
 
 MAX_RADIUS = 200
@@ -113,6 +115,32 @@ def place_atoms(number_of_atoms_per_color, clear_previous):
     clusters.clear()
 
 
+def update_atoms(filename, clear_previous):
+    global atoms
+    if clear_previous:
+        atoms = []
+
+    with open(filename, 'r') as f:
+        data = json.load(f)
+
+    substances = data['substances']
+    SETTINGS['numColors'] = len(substances)
+    SETTINGS['colors'] = [s['color'] for s in substances]
+    SETTINGS['color_map'] = {i: PREDEFINED_COLORS[i % len(PREDEFINED_COLORS)] for i in SETTINGS['colors']}
+
+    random_rules()
+
+    for s in substances:
+        atoms.extend(create(
+            s['count'], s['color'],
+            s['x0'], s['xf'],
+            s['y0'], s['yf']
+        ))
+
+    clusters.clear()
+
+
+
 
 def draw_square(surface, x, y, color, radius):
     pygame.draw.rect(surface, color, (x - radius, y - radius, 2 * radius, 2 * radius))
@@ -188,7 +216,13 @@ def apply_rules():
 
 set_number_of_colors()
 random_rules()
-place_atoms(SETTINGS['atoms']['count'], True)
+#place_atoms(SETTINGS['atoms']['count'], True)
+
+json_file = './particle.json'
+
+update_atoms(json_file, True)
+last_mtime = os.path.getmtime(json_file)
+
 
 clock = pygame.time.Clock()
 running = True
@@ -196,7 +230,14 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-
+    
+    current_mtime = os.path.getmtime(json_file)
+    if current_mtime != last_mtime:
+        print("Changes detected")
+        update_atoms(json_file, clear_previous=True)
+        last_mtime = current_mtime
+        
+    
     screen.fill(SETTINGS['drawings']['background_color'])
     apply_rules()
 
