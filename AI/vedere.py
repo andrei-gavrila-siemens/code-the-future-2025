@@ -4,11 +4,11 @@ import numpy as np
 import serial
 import time
 
-# deschidem serial către Arduino
+
 arduino = serial.Serial('/dev/ttyACM0', 9600)
 time.sleep(2)
 
-# intervalul de pauză după fiecare trimitere (în secunde)
+
 PAUSE_BETWEEN_SENDS = 5  
 
 def detect_colors(frame, color_ranges, min_area_threshold):
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         'purple': (128,   0, 128)
     }
 
-    # variabilă pentru a ști când am trimis ultima culoare
+    
     prev_color = None
 
     try:
@@ -64,7 +64,7 @@ if __name__ == "__main__":
             frame_with_detections = blurred.copy()
             detected = detect_colors(blurred, color_ranges_to_detect, min_area_threshold)
 
-            # desenăm toate detectările
+           
             for color, boxes in detected.items():
                 draw_col = color_draw.get(color, (255,255,255))
                 for (x1, y1), (x2, y2) in boxes:
@@ -73,21 +73,21 @@ if __name__ == "__main__":
                     cv2.putText(frame_with_detections, color, (x1, text_y),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, draw_col, 2)
 
-            # dacă am detectat cel puțin o culoare și e diferită de precedentă
+            
             if detected:
-                current_color = next(iter(detected))   # ia prima culoare detectată
+                current_color = next(iter(detected))  
                 if current_color != prev_color:
                     msg = f"{current_color}\n".encode()
                     arduino.write(msg)
                     print(f"Sent: {current_color}")
                     prev_color = current_color
-                    # pauză ca robotul să apuce cubul
+                    
                     time.sleep(PAUSE_BETWEEN_SENDS)
             else:
-                # resetăm când nu mai e cubul în cadru
+                
                 prev_color = None
 
-            # afișare
+          
             cv2.imshow("Color Detection", cv2.cvtColor(frame_with_detections, cv2.COLOR_RGB2BGR))
             if cv2.waitKey(1) == ord('q'):
                 break
@@ -96,3 +96,4 @@ if __name__ == "__main__":
         picam2.stop()
         picam2.close()
         cv2.destroyAllWindows()
+
