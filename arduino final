@@ -1,0 +1,109 @@
+#include <Braccio.h>
+#include <Servo.h>
+
+Servo base;
+Servo shoulder;
+Servo elbow;
+Servo wrist_ver;
+Servo wrist_rot;
+Servo gripper;
+
+const int vrxPin = A0;  // Joystick X
+const int vryPin = A1;  // Joystick Y
+const int swPin  = 8;   // Joystick SW
+
+int selectedServo = 5;  // Servo activ curent
+unsigned long lastPress = 5;
+int angles[6] = {90, 90, 90, 90, 90, 73}; // Poziții inițiale
+bool swLastState = HIGH;
+int pressCount = 0;  // Numărul de clickuri ale butonului
+
+void setup() {
+  Serial.begin(9600);
+  Braccio.begin();
+  pinMode(swPin, INPUT_PULLUP);
+
+  // Poziție inițială
+  Braccio.ServoMovement(20, angles[0], angles[1], angles[2], angles[3], angles[4], angles[5]);
+}
+
+void loop() {
+  // Verificăm dacă a fost apăsat joystick-ul (pentru a schimba servo-ul selectat)
+  bool swState = digitalRead(swPin);
+
+  if (swLastState == HIGH && swState == LOW && millis() - lastPress > 300) {
+    pressCount++; // Incrementăm numărul de clickuri
+
+    if (pressCount == 2) {
+      // La al doilea click, activăm cleștele
+      if (selectedServo == 5) {  // Servomotorul 5 este cleștele (gripper)
+        angles[5] = (angles[5] == 73) ? 10 : 73;  // Schimbăm starea cleștelui
+        pressCount = 0;  // Resetăm numărul de clickuri
+      }
+    }
+
+    selectedServo = (selectedServo + 1) % 6; // Ciclăm între 0-5 (toate servo-urile)
+    lastPress = millis();
+    Serial.print("Servo activ: ");
+    Serial.println(selectedServo);
+  }
+  swLastState = swState;
+
+  // Citim joystick
+  int xVal = analogRead(vrxPin);
+  int yVal = analogRead(vryPin);
+
+  // Mișcare pe X: control fin
+  if (xVal < 400 || xVal > 600) {
+    int delta = (xVal < 400) ? -1 : 1;
+    angles[selectedServo] += delta;
+    angles[selectedServo] = constrain(angles[selectedServo], 0, 180);
+    delay(150);  // Mișcare mai lentă
+  }
+
+  // Mișcare pe Y: control grosier (salt mai mare)
+  if (yVal < 400 || yVal > 600) {
+    int delta = (yVal < 400) ? -5 : 5;
+    angles[selectedServo] += delta;
+    angles[selectedServo] = constrain(angles[selectedServo], 0, 180);
+    delay(150);  // Mișcare mai lentă
+  }
+
+  // Executăm mișcarea
+  Braccio.ServoMovement(80, angles[0], angles[1], angles[2], angles[3], angles[4], angles[5]);
+}
+
+
+#include <Braccio.h>
+#include <Servo.h>
+
+Servo base;
+Servo shoulder;
+Servo elbow;
+Servo wrist_ver;
+Servo wrist_rot;
+Servo gripper;
+
+void setup() {
+  Serial.begin(9600);       // Serial prin USB
+  Braccio.begin();          // Inițializează servomotoarele
+}
+
+void loop() {
+  if (Serial.available()) {
+    String data = Serial.readStringUntil('\n');  // Citește linia de unghiuri
+    int angles[6];
+    int index = 0;
+
+    char ptr = strtok((char)data.c_str(), ",");
+    while (ptr != NULL && index < 6) {
+      angles[index++] = atoi(ptr);
+      ptr = strtok(NULL, ",");
+    }
+
+    if (index == 6) {
+      Braccio.ServoMovement(20, angles[0], angles[1], angles[2], angles[3], angles[4], angles[5]);
+      Serial.println("Mișcare executată.");
+    }
+  }
+}
