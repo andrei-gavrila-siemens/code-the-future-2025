@@ -119,6 +119,14 @@ void loop()
       Braccio.ServoMovement((110-sqrt(pow(xAxisValue, 2))), baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
       break;
   }
+
+  if (shoulderAngle < 160)
+  {
+    wristVerAngle = 192 - shoulderAngle;
+    wristVerAngle = constrain(wristVerAngle, 0, 180);
+  }
+
+  shoulderAngle = constrain(shoulderAngle, 0, 180);
 }
 
 void runIdle()
@@ -203,7 +211,7 @@ void runAuto()
   elbowAngle = elbowAngle_auto_end;
   wristVerAngle = wristVerAngle_auto_end;
   wristRotAngle = wristRotAngle_auto_end;
-  Braccio.ServoMovement(60, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, 73);
+  Braccio.ServoMovement(60, baseAngle, shoulderAngle, elbowAngle - 10, wristVerAngle, wristRotAngle, 73);
 
   joystickConfig();
   if (isAnyBtnPressed() && !cBtnValue)
@@ -225,13 +233,6 @@ void armController()
   baseAngle += xAxisValue * .1;
   baseAngle = constrain(baseAngle, 0, 180);
   shoulderAngle += yAxisValue * .1;
-  if (shoulderAngle < 160)
-  {
-    wristVerAngle = 192 - shoulderAngle;
-    wristVerAngle = constrain(wristVerAngle, 0, 180);
-  }
-
-  shoulderAngle = constrain(shoulderAngle, 0, 180);
   
   if (dBtnValue) 
   {
