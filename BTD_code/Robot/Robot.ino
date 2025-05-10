@@ -1,6 +1,7 @@
 #include <Braccio.h>
 #include <Servo.h>
 #include <Arduino.h>
+#include <ArduinoBLE.h>
 
 // DEFINIRE PINI
 #define X A0
@@ -22,6 +23,9 @@ Servo elbow;
 Servo wrist_rot;
 Servo wrist_ver;
 Servo gripper;
+
+BLEService customService("180C");
+BLECharacteristic rxCharacteristic("2A56", BLEWrite, 20);
 
 // POZITIILE BRATULUI
 int baseAngle_idle = 90;
@@ -49,7 +53,6 @@ int elbowAngle = 180;
 int wristVerAngle = 90;
 int wristRotAngle = 90;
 int gripperAngle = 73;
-
 
 // INTRARI
 int xAxisValue;
@@ -83,36 +86,79 @@ void setup()
 
   Braccio.begin();
   state = Idle;
+  
+  // initializeare serial ble
+  while (!Serial);
+
+  if (!BLE.begin()) {
+    Serial.println("Failed to start BLE!");
+    while (1);
+  }
+
+  BLE.setLocalName("ArduinoR4BLE");
+  BLE.setAdvertisedService(customService);
+  customService.addCharacteristic(rxCharacteristic);
+  BLE.addService(customService);
+
+  BLE.advertise();
+  Serial.println("BLE service is advertising...");
 }
 
 
 void loop()
 {
-  joystickInputHandler();
+  BLEDevice central = BLE.central();
 
-  switch (state)
-  {
-    default:
-    case Idle:
-      runIdle();
-      Braccio.ServoMovement(60, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
-      break;
-    case Auto:
-      runAuto();
-      break;
-    case Manual:
-      runManual();
-      Braccio.ServoMovement((110-sqrt(pow(xAxisValue, 2))), baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
-      break;
+  if (central) {
+    Serial.print("Connected to central: ");
+    Serial.println(central.address());
+
+    while (central.connected()) {
+      joystickInputHandler();
+
+      switch (state)
+      {
+        default:
+        case Idle:
+          runIdle();
+          Braccio.ServoMovement(60, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
+          break;
+        case Auto:
+          runAuto();
+          break;
+        case Manual:
+          runManual();
+          Braccio.ServoMovement((110-sqrt(pow(xAxisValue, 2))), baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, gripperAngle);
+          break;
+      }
+
+      if (shoulderAngle < 160)
+      {
+        wristVerAngle = 192 - shoulderAngle;
+        wristVerAngle = constrain(wristVerAngle, 0, 180);
+      }
+
+      shoulderAngle = constrain(shoulderAngle, 0, 180);
+    }
+
+    Serial.println("Disconnected.");
   }
+}
 
-  if (shoulderAngle < 160)
-  {
-    wristVerAngle = 192 - shoulderAngle;
-    wristVerAngle = constrain(wristVerAngle, 0, 180);
+// Conexiune BLE
+void bleHandler()
+{
+  if (rxCharacteristic.written()) {
+    const uint8_t* data = rxCharacteristic.value();
+    int len = rxCharacteristic.valueLength();
+    String msg = "";
+    for (int i = 0; i < len; i++) {
+      msg += (char)data[i];
+    }
+    Serial.print("BLE: ");
+    Serial.println(msg);
+    BLE.central();
   }
-
-  shoulderAngle = constrain(shoulderAngle, 0, 180);
 }
 
 // Functie de resetare a pozitiei bratului
@@ -126,7 +172,7 @@ void runIdle()
   wristVerAngle = 180;
   wristRotAngle = 90;
   gripperAngle = 73;
-
+  bleHandler();
   if (isAnyBtnPressed() && !aBtnValue)
   {
     state = Manual;
@@ -138,10 +184,10 @@ void runManual()
 {
   // Serial.println("RUN");
   armController();
+  bleHandler();
 
   if (eBtnValue)
   {
-    Serial.println("SAVED START");
     baseAngle_auto_start = baseAngle;
     shoulderAngle_auto_start = shoulderAngle;
     elbowAngle_auto_start = elbowAngle;
@@ -151,7 +197,6 @@ void runManual()
 
   if (fBtnValue)
   {
-    Serial.println("SAVED END");
     baseAngle_auto_end = baseAngle;
     shoulderAngle_auto_end = shoulderAngle;
     elbowAngle_auto_end = elbowAngle;
@@ -180,6 +225,11 @@ void runAuto()
   wristVerAngle = wristVerAngle_auto_start;
   wristRotAngle = wristRotAngle_auto_start;
 
+  bleHandler();
+  bleHandler();
+  bleHandler();
+  bleHandler();
+  bleHandler();
   Braccio.ServoMovement(60, baseAngle, shoulderAngle, elbowAngle - 20, wristVerAngle, wristRotAngle, 10);
 
   joystickInputHandler();
@@ -188,9 +238,13 @@ void runAuto()
     state = Manual;
   }
 
+  bleHandler();
+  bleHandler();
+  bleHandler();
+  bleHandler();
+  bleHandler();
   Braccio.ServoMovement(20, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, 73);
   
-
   joystickInputHandler();
   if (isAnyBtnPressed() && !cBtnValue)
   {
@@ -202,6 +256,12 @@ void runAuto()
   elbowAngle = elbowAngle_auto_end;
   wristVerAngle = wristVerAngle_auto_end;
   wristRotAngle = wristRotAngle_auto_end;
+  
+  bleHandler();
+  bleHandler();
+  bleHandler();
+  bleHandler();
+  bleHandler();
   Braccio.ServoMovement(60, baseAngle, shoulderAngle, elbowAngle - 10, wristVerAngle, wristRotAngle, 73);
 
   joystickInputHandler();
@@ -210,6 +270,11 @@ void runAuto()
     state = Manual;
   }
 
+  bleHandler();
+  bleHandler();
+  bleHandler();
+  bleHandler();
+  bleHandler();
   Braccio.ServoMovement(60, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, 10);
 
   joystickInputHandler();
