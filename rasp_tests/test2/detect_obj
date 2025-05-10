@@ -3,135 +3,285 @@ import numpy as np
 from picamera2 import Picamera2
 import serial
 import time
+import traceback
 
-# --- Configurare Cameră (picamera2) ---
 try:
     print("Inițializare Picamera2...")
     picam2 = Picamera2()
-    config = picam2.create_preview_configuration(main={"size": (640, 480), "format": 'XRGB8888'})
+    config = picam2.create_preview_configuration(main={"size": (640, 480), "format": 'BGR888'})
     picam2.configure(config)
     picam2.start()
-    print("Picamera2 pornită.")
+    FRAME_WIDTH = config["main"]["size"][0]
+    FRAME_HEIGHT = config["main"]["size"][1]
+    print(f"Picamera2 pornită. Rezoluție: {FRAME_WIDTH}x{FRAME_HEIGHT}, Format: BGR888")
     time.sleep(1)
 except Exception as e:
-    print(f"EROARE la inițializarea Picamera2: {e}")
+    print(f"EROARE FATALĂ la inițializarea Picamera2: {e}")
+    traceback.print_exc()
     exit()
 
-# --- Configurare Comunicare Serială cu Arduino ---
-SERIAL_PORT = '/dev/ttyACM0' # Schimbă dacă este necesar!
+SERIAL_PORT = 'COM12'
 BAUD_RATE = 9600
-arduino = None # Inițializare cu None
+arduino = None
 try:
     print(f"Conectare la Arduino pe portul {SERIAL_PORT} la {BAUD_RATE} baud...")
     arduino = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
     time.sleep(2)
-    print("Conectat la Arduino.")
+    if arduino.is_open:
+        print("Conectat la Arduino cu succes.")
+    else:
+        print("EROARE: Portul serial a fost deschis, dar nu este considerat 'is_open'. Verificați setările.")
+        arduino = None
 except serial.SerialException as e:
     print(f"EROARE la conectarea cu Arduino: {e}")
-    print("Scriptul va continua fără control Arduino.")
+    print("Scriptul va continua fără control Arduino (mod doar vizualizare).")
+except Exception as e:
+    print(f"EROARE neașteptată la inițializarea conexiunii seriale: {e}")
+    traceback.print_exc()
+    print("Scriptul va continua fără control Arduino (mod doar vizualizare).")
 
 
 def send_command_to_arduino(command_str):
     if arduino and arduino.is_open:
         try:
-            print(f"Trimit comanda: {command_str}")
-            arduino.write(command_str.encode('utf-8'))
+            full_command = command_str.strip() + "\n"
+            print(f"Trimit comanda Arduino: '{full_command.strip()}'")
+            arduino.write(full_command.encode('utf-8'))
             arduino.flush()
         except Exception as e:
-            print(f"EROARE la trimiterea comenzii către Arduino: {e}")
+            print(f"EROARE la trimiterea comenzii către Arduino ('{command_str.strip()}'): {e}")
     else:
-        print(f"DEBUG: Arduino nu este conectat. Comanda ar fi fost: '{command_str.strip()}'")
+        print(f"DEBUG (Arduino deconectat): Comanda ar fi fost: '{command_str.strip()}'")
 
-# --- VALORI HSV PENTRU VERDE (ÎNLOCUIEȘTE CU CELE CALIBRATE DE TINE!) ---
-LOWER_GREEN_H = 40   # Exemplu: Nuanța inferioară (CALIBREAZĂ!)
-LOWER_GREEN_S = 50   # Exemplu: Saturație minimă (CALIBREAZĂ!)
-LOWER_GREEN_V = 50   # Exemplu: Valoare/Luminozitate minimă (CALIBREAZĂ!)
 
-UPPER_GREEN_H = 80   # Exemplu: Nuanța superioară (CALIBREAZĂ!)
-UPPER_GREEN_S = 255  # Saturație maximă
-UPPER_GREEN_V = 255  # Valoare/Luminozitate maximă
+TARGET_OBJECT_WIDTH_CM = 4.0
+FOCAL_LENGTH_PIXELS = 650
 
-# Creare array-uri NumPy din valorile de mai sus
-lower_green = np.array([LOWER_GREEN_H, LOWER_GREEN_S, LOWER_GREEN_V])
-upper_green = np.array([UPPER_GREEN_H, UPPER_GREEN_S, UPPER_GREEN_V])
+MIN_CONTOUR_AREA = 200
+MAX_CONTOUR_AREA_ALLOWED = 60000
 
-MIN_CONTOUR_AREA = 500 # Aria minimă a conturului pentru a fi considerat un obiect valid
+MIN_ASPECT_RATIO = 0.65
+MAX_ASPECT_RATIO = 1.55
 
-print("Pornire buclă principală de procesare...")
+MIN_SOLIDITY = 0.80
+MIN_EXTENT = 0.60
+
+GAUSSIAN_BLUR_KERNEL_SIZE = (5, 5)
+MORPH_KERNEL_SIZE = (5, 5)
+kernel_morph = np.ones(MORPH_KERNEL_SIZE, np.uint8)
+
+COLOR_RANGES = {
+    "red": {
+        "lower": np.array([0, 120, 70]),
+        "upper": np.array([10, 255, 255]),
+        "lower2": np.array([160, 120, 70]),
+        "upper2": np.array([180, 255, 255]),
+        "bgr_color": (0, 0, 255)
+    },
+    "green": {
+        "lower": np.array([35, 100, 70]),
+        "upper": np.array([85, 255, 255]),
+        "bgr_color": (0, 255, 0)
+    },
+    "blue": {
+        "lower": np.array([90, 100, 70]),
+        "upper": np.array([130, 255, 255]),
+        "bgr_color": (255, 0, 0)
+    },
+    "yellow": {
+        "lower": np.array([20, 120, 100]),
+        "upper": np.array([35, 255, 255]),
+        "bgr_color": (0, 255, 255)
+    },
+    "orange": {
+        "lower": np.array([10, 120, 100]),
+        "upper": np.array([25, 255, 255]),
+        "bgr_color": (0, 165, 255)
+    },
+    "purple": {
+        "lower": np.array([130, 100, 70]),
+        "upper": np.array([160, 255, 255]),
+        "bgr_color": (200, 0, 200)
+    }
+}
+
+    """Draws bounding boxes on the input image and return it.
+
+    Args:
+      image: The input RGB image.
+      detection_result: The list of all "Detection" entities to be visualize.
+
+    Returns:
+      Image with bounding boxes.
+    """
+def estimate_distance_cm(object_pixel_width):
+    if object_pixel_width == 0:
+        return float('inf')
+    return (TARGET_OBJECT_WIDTH_CM * FOCAL_LENGTH_PIXELS) / object_pixel_width
+
+print("Pornire buclă principală de procesare a imaginilor...")
 try:
     while True:
-        frame_rgba = picam2.capture_array("main")
-        frame_rgb = cv2.cvtColor(frame_rgba, cv2.COLOR_RGBA2RGB)
-        frame_bgr = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
-        
-        hsv = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2HSV)
+        frame_bgr = picam2.capture_array("main")
+        if frame_bgr is None:
+            print("EROARE: Nu s-a putut captura imaginea de la Picamera2.")
+            time.sleep(0.5)
+            continue
 
-        # Creează masca pentru verde
-        final_mask = cv2.inRange(hsv, lower_green, upper_green)
-        
-        # Opțional: Operații morfologice pentru a curăța masca
-        kernel = np.ones((5,5),np.uint8)
-        final_mask_processed = cv2.morphologyEx(final_mask, cv2.MORPH_OPEN, kernel)
-        final_mask_processed = cv2.morphologyEx(final_mask_processed, cv2.MORPH_CLOSE, kernel)
-        
-        contours, _ = cv2.findContours(final_mask_processed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        blurred_frame = cv2.GaussianBlur(frame_bgr, GAUSSIAN_BLUR_KERNEL_SIZE, 0)
+        hsv_frame = cv2.cvtColor(blurred_frame, cv2.COLOR_BGR2HSV)
 
-        object_detected_this_frame = False
-        if contours:
-            largest_contour = max(contours, key=cv2.contourArea)
-            area = cv2.contourArea(largest_contour)
+        all_detected_objects = []
 
-            if area > MIN_CONTOUR_AREA:
-                object_detected_this_frame = True
-                M = cv2.moments(largest_contour)
-                if M["m00"] != 0:
-                    center_x = int(M["m10"] / M["m00"])
-                    center_y = int(M["m01"] / M["m00"])
+        for color_name, color_data in COLOR_RANGES.items():
+            mask_primary = cv2.inRange(hsv_frame, color_data["lower"], color_data["upper"])
 
-                    cv2.circle(frame_bgr, (center_x, center_y), 7, (255, 0, 255), 2) # Mov pentru detecție verde
-                    cv2.putText(frame_bgr, f"Verde ({center_x},{center_y})", (center_x - 50, center_y - 20),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 2) # Text negru
-                    cv2.drawContours(frame_bgr, [largest_contour], -1, (0, 255, 0), 2) # Contur verde
+            final_mask = mask_primary
+            if "lower2" in color_data and "upper2" in color_data:
+                mask_secondary = cv2.inRange(hsv_frame, color_data["lower2"], color_data["upper2"])
+                final_mask = cv2.bitwise_or(mask_primary, mask_secondary)
 
-                    # --- Logică pentru a comanda brațul robotic (adaptată) ---
-                    frame_width = frame_bgr.shape[1]
-                    command = "ASTEAPTA" 
-                    if center_x < frame_width / 3:
-                        command = "STANGA"
-                    elif center_x > frame_width * 2 / 3:
-                        command = "DREAPTA"
-                    else: 
-                        command = "PRINDE_VERDE" # Comandă specifică
-                    
-                    send_command_to_arduino(command + "\n")
-                    time.sleep(0.5)
+            mask_processed = cv2.morphologyEx(final_mask, cv2.MORPH_OPEN, kernel_morph)
+            mask_processed = cv2.morphologyEx(mask_processed, cv2.MORPH_CLOSE, kernel_morph)
 
-        if not object_detected_this_frame:
-             send_command_to_arduino("ASTEAPTA\n") 
-             time.sleep(0.1)
+            contours, _ = cv2.findContours(mask_processed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+            for contour in contours:
+                area = cv2.contourArea(contour)
+                if not (MIN_CONTOUR_AREA < area < MAX_CONTOUR_AREA_ALLOWED):
+                    continue
 
-        cv2.imshow("Camera (Detectie Verde)", frame_bgr)
-        cv2.imshow("Masca Verde Finala", final_mask_processed)
+                x, y, w, h = cv2.boundingRect(contour)
+                if w == 0 or h == 0:
+                    continue
+
+                aspect_ratio = float(w) / h
+                if not (MIN_ASPECT_RATIO < aspect_ratio < MAX_ASPECT_RATIO):
+                    continue
+
+                solidity_val = -1.0
+                if area > 0:
+                    hull = cv2.convexHull(contour)
+                    hull_area = cv2.contourArea(hull)
+                    if hull_area > 0:
+                        solidity_val = float(area) / hull_area
+                        if solidity_val < MIN_SOLIDITY:
+                            continue
+                    else:
+                        continue
+                else:
+                    continue
+
+                extent_val = -1.0
+                rect_area = w * h
+                if rect_area > 0:
+                    extent_val = float(area) / rect_area
+                    if extent_val < MIN_EXTENT:
+                        continue
+                else:
+                    continue
+
+                distance_cm = estimate_distance_cm(w)
+                moments = cv2.moments(contour)
+                center_x, center_y = -1, -1
+                if moments["m00"] != 0:
+                    center_x = int(moments["m10"] / moments["m00"])
+                    center_y = int(moments["m01"] / moments["m00"])
+
+                all_detected_objects.append({
+                    "color_name": color_name,
+                    "center_x": center_x,
+                    "center_y": center_y,
+                    "contour": contour,
+                    "area": area,
+                    "distance_cm": distance_cm,
+                    "width_px": w,
+                    "height_px": h,
+                    "bgr_draw_color": color_data["bgr_color"],
+                    "solidity": solidity_val,
+                    "extent": extent_val
+                })
+
+        object_to_target = None
+        if all_detected_objects:
+            all_detected_objects.sort(key=lambda obj: obj['distance_cm'])
+            object_to_target = all_detected_objects[0]
+
+        command_to_send = "ASTEAPTA"
+
+        if object_to_target:
+            cx = object_to_target["center_x"]
+            cy = object_to_target["center_y"]
+            dist_cm = object_to_target["distance_cm"]
+            detected_color_name = object_to_target["color_name"]
+            bgr_draw_color = object_to_target["bgr_draw_color"]
+
+            cv2.drawContours(frame_bgr, [object_to_target["contour"]], -1, bgr_draw_color, 3)
+            cv2.circle(frame_bgr, (cx, cy), 7, (255, 255, 255), -1)
+            cv2.circle(frame_bgr, (cx, cy), 8, bgr_draw_color, 2)
+
+            info_text = f"{detected_color_name.capitalize()} @ {dist_cm:.0f}cm"
+            (text_width, text_height), baseline = cv2.getTextSize(info_text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+            text_x = max(0, min(cx - text_width // 2, FRAME_WIDTH - text_width - 1))
+            text_y = max(text_height + baseline + 5, cy - 10)
+
+            cv2.rectangle(frame_bgr, (text_x - 2, text_y - text_height - 2 - baseline),
+                          (text_x + text_width + 2, text_y + baseline - 1),
+                          (200, 200, 200), -1)
+            cv2.putText(frame_bgr, info_text, (text_x, text_y - baseline),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+
+            center_zone_left_boundary = FRAME_WIDTH * 0.40
+            center_zone_right_boundary = FRAME_WIDTH * 0.60
+            PRINDERE_MAX_DIST_CM = 15.0
+
+            if dist_cm <= PRINDERE_MAX_DIST_CM:
+                if center_zone_left_boundary <= cx <= center_zone_right_boundary:
+                    command_to_send = f"PRINDE_{detected_color_name.upper()}"
+                elif cx < center_zone_left_boundary:
+                    command_to_send = "m1_spate"
+                else:
+                    command_to_send = "m1_fata"
+            else:
+                if center_zone_left_boundary <= cx <= center_zone_right_boundary:
+                    command_to_send = "INAINTE"
+                elif cx < center_zone_left_boundary:
+                    command_to_send = "m1_spate"
+                else:
+                    command_to_send = "m1_fata"
+
+            send_command_to_arduino(command_to_send)
+            time.sleep(0.2)
+        else:
+            send_command_to_arduino("CAUTA")
+            time.sleep(0.1)
+
+        cv2.imshow("Detectie Multi-Color (Camera)", frame_bgr)
 
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
-            print("Tasta 'q' apăsată. Oprire...")
-            send_command_to_arduino("STOP\n")
+            print("Tasta 'q' apăsată. Oprire program...")
+            send_command_to_arduino("STOP")
             break
-
+        elif key == ord('s'):
+            print("Tasta 's' apasata. Test Arduino: PORNIT_LED")
+            send_command_to_arduino("PORNIT_LED_TEST")
 except KeyboardInterrupt:
     print("Program întrerupt de la tastatură (Ctrl+C).")
-    send_command_to_arduino("STOP_EMERGENTA\n")
+    send_command_to_arduino("STOP_EMERGENTA")
 except Exception as e:
-    print(f"A apărut o eroare neașteptată: {e}")
+    print(f"A apărut o eroare neașteptată în bucla principală: {e}")
+    traceback.print_exc()
+    send_command_to_arduino("EROARE_SOFTWARE")
 finally:
     print("Eliberare resurse...")
     if 'picam2' in locals() and picam2.started:
         picam2.stop()
         print("Picamera2 oprită.")
     if arduino and arduino.is_open:
+        send_command_to_arduino("DECONECTARE_SOFT")
         arduino.close()
         print("Conexiune Arduino închisă.")
     cv2.destroyAllWindows()
-    print("Ferestre distruse. Program încheiat.")
+    print("Ferestre OpenCV distruse.")
+    print("Program încheiat.")
