@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import datetime
+import serial
 import subprocess
 import signal
 import time
@@ -8,7 +8,12 @@ import os
 from collections import deque
 
 class ShapeDetector:
-    def _init_(self, video_device='/dev/video10', width=640, height=480, framerate=60, focus_distance=27):
+    def __init__(self, video_device='/dev/video10', width=640, height=480, framerate=60, focus_distance=27):
+        # Only initialize serial if directly using Arduino
+        self.arduinoSerial = serial.Serial('/dev/ttyACM0', 9600)
+            
+        self.lastDetectedTimestamp = time.time()
+        self.lastShape = None
         self.video_device = video_device
         self.width = width
         self.height = height
@@ -16,7 +21,6 @@ class ShapeDetector:
         self.focus_distance = focus_distance  # Focus distance in cm
         self.camera_proc = None
         self.cap = None
-        self.log_file = open("shapes_log.txt", "a")
         self.valid_shapes = ["Square", "Circle", "Semicircle", "Triangle"]
         
          # Constants for detection
@@ -185,13 +189,6 @@ class ShapeDetector:
         print("Running detection. Press Q to quit. Press F to adjust focus.")
         
         try:
-            frame_count = 0
-            fps_start_time = time.time()
-            fps = 0
-            
-            # For calculating actual processing speed
-            process_times = deque(maxlen=30)
-            
             while True:
                 loop_start = time.time()
                 
@@ -267,8 +264,6 @@ class ShapeDetector:
         # Find contours
         contours, _ = cv2.findContours(color_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
-        # Process each contour
-        detected_count = 0
         # print(f'length={len(contours)}')
         for cnt in contours:
             area = cv2.contourArea(cnt)
@@ -280,33 +275,52 @@ class ShapeDetector:
             if not self.is_inside_white_bg(cnt, paper_mask):
                 continue
                 
+            # Get color information from center region
+            x, y, w, h = cv2.boundingRect(cnt)
+            
+            center_x = (x + w)/2
+            center_y = (y + h)/2
+
             # Get shape
             shape = self.classify_shape(cnt, approx, area)
+            if shape == self.lastShape and shape != 'Unknown':
+                time_now = time.time()
+                if time_now - self.lastDetectedTimestamp > 3:
+                    print('time has passed')
+                    self.lastShape = None
+                    self.lastDetectedTimestamp = None
+                    
+                    self.send_arduino_trigger(center_x, center_y, shape == 'Square')
+            else:
+                self.lastShape = shape
+                self.lastDetectedTimestamp = time.time()
             
             # Only process valid shapes
             shapeIsInvalid = shape not in self.valid_shapes
             if shapeIsInvalid:
-                continue
-                
-            # Get color information from center region
-            x, y, w, h = cv2.boundingRect(cnt)
-            color_region = hsv[y + h // 4:y + 3 * h // 4, x + w // 4:x + 3 * w // 4]
-            
-            # Get the dominant color in BGR
-            mean_hsv = cv2.mean(color_region)
+                continue    
             
             # Draw results
             cv2.drawContours(frame, [cnt], -1, (0, 255, 0), 2)
-            # cv2.putText(frame, f"{shape}", (x, y - 10), 
-            #             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-            center_x = (x + w)/2
-            center_y = (y + h)/2
-            cv2.putText(frame, f"{center_x};{center_y}", (x, y - 10), 
+            
+            # Display shape name and coordinates
+            cv2.putText(frame, f"{shape}: ({int(center_x)}, {int(center_y)})", (x, y - 10), 
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
             
         return frame
     
-
+    def send_arduino_trigger(self, center_x, center_y, isCorrect):
+        """Send trigger to Arduino - default implementation, will be overridden in controller"""
+        if self.arduinoSerial:
+            # Convert to strings and encode as bytes
+            x_str = str(int(center_x)).encode()
+            y_str = str(int(center_y)).encode()
+            # self.arduinoSerial.write(b"" + x_str + b":" + y_str + b"\n")
+            self.arduinoSerial.write(b"2" if isCorrect else b"1")
+            print(b"2" if isCorrect else b"1")
+            print(f"Sent to Arduino")
+        else:
+            print(f"Shape detected at {center_x}, {center_y} but no Arduino connection")
     
     def cleanup(self):
         """Clean up resources"""
@@ -317,29 +331,5 @@ class ShapeDetector:
             
         if self.camera_proc is not None:
             self.camera_proc.terminate()
-        
-        if self.log_file is not None:
-            self.log_file.close()
             
         cv2.destroyAllWindows()
-
-def main():
-    """Main function with error handling"""
-    try:
-        print("Starting Shape Detector...")
-        detector = ShapeDetector(framerate=60)  # Try to run at 60fps
-        if detector.start_camera_stream():
-            detector.run_detection()
-        else:
-            print("Failed to start camera stream. Exiting.")
-    except KeyboardInterrupt:
-        print("Program interrupted by user")
-    except Exception as e:
-        print(f"Unexpected error: {str(e)}")
-    finally:
-        print("Exiting program")
-        if 'detector' in locals():
-            detector.cleanup()
-
-if __name__ == "__main__":
-    main()
