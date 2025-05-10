@@ -18,7 +18,7 @@ const Footer = () => {
       <div className="max-w-6xl mx-auto grid gap-10 sm:grid-cols-2 md:grid-cols-4">
         {/* Brand */}
         <div>
-          <h2 className="text-2xl font-bold mb-4">CUBURI</h2>
+          <h2 className="text-2xl font-bold mb-4">CUBURI ™</h2>
           <p className="text-sm mb-4">
             Unique educational toy cubes. Designed for creativity, crafted for fun.
           </p>

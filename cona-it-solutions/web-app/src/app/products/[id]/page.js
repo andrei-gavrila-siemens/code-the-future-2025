@@ -1,13 +1,15 @@
 'use server';
 
 import React from 'react'
-import cubes from "@/db/cuburi.json"
 import ProductPage from '@/components/pages/ProductPage';
+import { fetchCubes } from '@/lib/models';
 
 export default async function page({params}) {
   const {id} = await params
 
-  const cube = await cubes.filter((cube) => cube.id == id)[0];
+  const cubes = await fetchCubes();
+
+  const cube = await cubes.find((cube) => cube.id == id);
 
   return (
     <ProductPage cube={cube} />

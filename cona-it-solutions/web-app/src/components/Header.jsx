@@ -1,11 +1,12 @@
-"use client"
-
 import Link from "next/link"
 import { Cuboid } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import CartSheet from "./CartSheet"
+import { fetchCubes } from "@/lib/models"
 
-export default function Header() {
+export default async function Header() {
+
+  const cubes = await fetchCubes();
 
   return (
     <nav className="w-full border-b sticky top-0 bg-white">
@@ -22,7 +23,7 @@ export default function Header() {
             </Link>
           </Button>
 
-          <CartSheet />
+          <CartSheet cubes={cubes}/>
         </div>
       </div>
     </nav>

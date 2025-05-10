@@ -25,10 +25,10 @@ export default function CubCard({cube}) {
         <CardDescription>{cube.description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <Image src={cube.image} width={1080} height={1080} alt='cube image' className='w-full'/>
+        <Image src={"/"+cube.image} width={1080} height={1080} alt='cube image' className='w-full'/>
       </CardContent>
       <CardFooter className="flex gap-4">
-        <Button onClick={()=>{cart.addToCart(cube.id, cube.price)}}>Add to cart</Button>
+        <Button onClick={()=>{cart.addToCart(cube.id, cube.price, cube.color, cube.stock)}}>Add to cart</Button>
         <Link href={`/products/${cube.id}`}>
           <Button variant="secondary">View Product</Button>
         </Link>

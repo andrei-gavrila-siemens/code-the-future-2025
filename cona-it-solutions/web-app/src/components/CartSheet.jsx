@@ -1,3 +1,5 @@
+'use client';
+
 import { useContext } from 'react'
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription, SheetClose } from "@/components/ui/sheet"
 import CubCart from "./CubCart"
@@ -5,12 +7,12 @@ import { useState, useEffect } from "react"
 import { Button } from './ui/button'
 import { ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
-import cubes from "@/db/cuburi.json"
 import { CartContext } from '@/lib/context/cart'
+import { sendOrder } from '@/lib/models';
 
-export default function CartSheet() {
+export default function CartSheet({cubes}) {
   const [side, setSide] = useState("top");
-  const {cart, total} = useContext(CartContext);
+  const {cart, total, confirmOrder} = useContext(CartContext);
 
   useEffect(() => {
     const handleResize = () => {
@@ -31,7 +33,7 @@ export default function CartSheet() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const cartCubes = cubes.filter((cube)=> cart.find((cartCube) => cartCube.cube_id == cube.id))
+  const cartCubes = cubes?.filter((cube)=> cart.find((cartCube) => cartCube.cube_id == cube.id))
 
   return (
     <Sheet>
@@ -48,17 +50,17 @@ export default function CartSheet() {
           <SheetDescription>
           </SheetDescription>
         </SheetHeader>
-        {cartCubes.length ? 
+        {cartCubes?.length ? 
         
           <div className="px-4 pb-4">
             <div className='flex flex-col my-8'>
-              {cartCubes.map((cube, index)=>
+              {cartCubes?.map((cube, index)=>
                 <CubCart cube={cube} key={index}/>
               )}
             </div>
             <p className='mb-8 text-xl'>Your order total is: <span className='font-bold'>{total.toFixed(2)} lei</span></p>
             <SheetClose asChild>
-              <Button asChild>
+              <Button asChild onClick={()=>{sendOrder(cart);confirmOrder()}}>
                 <Link href="/confirmation">
                   Confirm order
                 </Link>

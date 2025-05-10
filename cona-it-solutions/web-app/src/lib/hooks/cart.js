@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { isCubeInStock } from "../utils";
 
 export const useCart = ()=>{
   const [cart, setCart] = useState([]);
@@ -10,18 +9,14 @@ export const useCart = ()=>{
   useEffect(()=>{
     setTotal(()=>{
       let newTotal = 0;
-      console.log(cart);
       for(const cartItem of cart){
-        console.log(cartItem);
         newTotal += cartItem.price_unit * cartItem.quantity;
       }
-      
-      console.log(newTotal);
       return newTotal;
     })
   }, [cart])
 
-  function addToCart(id, price_unit) {
+  function addToCart(id, price_unit, color, stock) {
     setCart((prev) => {
       const existingCube = prev.find((item) => item.cube_id === id);
   
@@ -29,7 +24,7 @@ export const useCart = ()=>{
         // Update quantity for the existing cube
         return prev.map((item) => {
             if(item.cube_id === id){
-              if(isCubeInStock(id, item.quantity)){
+              if(stock > item.quantity){
                 return { ...item, quantity: item.quantity + 1 }
               }else{
                 return item;
@@ -42,8 +37,8 @@ export const useCart = ()=>{
         );
       } else {
         // Add new cube to cart
-        if(isCubeInStock(id, 1)){
-          return [...prev, { cube_id: id, quantity: 1, price_unit: price_unit }];
+        if(stock > 1){
+          return [...prev, { cube_id: id, quantity: 1, price_unit: price_unit, color: color }];
         }else{
           return [...prev];
         }
@@ -51,11 +46,11 @@ export const useCart = ()=>{
     });
   }
 
-  function increaseQuantity(id){
+  function increaseQuantity(id, stock){
     setCart((prev)=>
       prev.map((item) =>{
         if(item.cube_id === id){
-          if(isCubeInStock(id, item.quantity)){
+          if(stock > item.quantity){
             return { ...item, quantity: item.quantity + 1 }
           }else{
             return item;
@@ -89,5 +84,9 @@ export const useCart = ()=>{
     }
   }
 
-  return {cart, total, setCart, addToCart, increaseQuantity, decrementQuanity};
+  function confirmOrder(){
+    setCart([]);
+  }
+
+  return {cart, total, setCart, addToCart, increaseQuantity, decrementQuanity, confirmOrder};
 }

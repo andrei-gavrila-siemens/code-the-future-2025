@@ -1,9 +1,11 @@
 import React from 'react'
 import CubCard from "@/components/CubCard";
-import cubes from "@/db/cuburi.json"
+import { fetchCubes } from '@/lib/models';
 
 
-export default function page() {
+export default async function page() {
+  const cubes = await fetchCubes();
+
   return (
     <div className="flex flex-col sm:px-8 md:px-20 lg:px-40">
       <h1 className='text-2xl text-center'>Have a look at our variety of products</h1>

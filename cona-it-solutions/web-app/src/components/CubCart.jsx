@@ -20,7 +20,7 @@ export default function CubCart({cube}) {
   return (
     <div className='border-t border-b flex justify-between items-center'>
       <Link className='flex items-center' href="/products/1">
-        <Image src={cube.image} width={100} height={100} alt='cube image' />
+        <Image src={"/"+cube.image} width={100} height={100} alt='cube image' />
         <p>{cube.name}</p>
       </Link>
       <div className='flex flex-col items-center'>
@@ -28,7 +28,7 @@ export default function CubCart({cube}) {
         <div className='flex gap-4 items-center'>
           <Button variant="secondary" size="icon" onClick={()=>{decrementQuanity(cube.id)}}>-</Button>
           <p>{cubeCartItem.quantity}</p>
-          <Button size="icon" onClick={()=>{increaseQuantity(cube.id)}}>+</Button>
+          <Button size="icon" onClick={()=>{increaseQuantity(cube.id, cube.stock)}}>+</Button>
         </div>
       </div>
     </div>
