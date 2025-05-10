@@ -34,8 +34,8 @@ int getDistanceCM() {
 }
 
 int scanForBottle() {
-  for (int baseAngle = 120; baseAngle <= 270; baseAngle += 2) {
-    Braccio.ServoMovement(20, baseAngle, 140, 110, 85, 90, 10);
+  for (int baseAngle = 0; baseAngle <= 170; baseAngle += 2) {
+    Braccio.ServoMovement(20, baseAngle, 90, 150, 120, 90, 10);
     delay(300);
     int distance = getDistanceCM();
     if (distance < 6 && !(baseAngle > 95 && baseAngle < 105)) {
@@ -49,23 +49,23 @@ void waterPlant() {
   int detectedAngle = scanForBottle();
   if (detectedAngle != -1) {
     // Move to bottle position
-    Braccio.ServoMovement(20, detectedAngle, 140, 110, 85, 90, 10); 
+    Braccio.ServoMovement(20, detectedAngle, 90, 150, 120, 90, 10); 
     delay(1000);
-    Braccio.ServoMovement(20, detectedAngle, 160, 110, 90, 90, 10); // Move to bottle
-    Braccio.ServoMovement(20, detectedAngle, 160, 110, 90, 90, 73); // Close gripper
-    Braccio.ServoMovement(20, detectedAngle, 100, 120, 90, 90, 73); // Lift bottle
-    Braccio.ServoMovement(10, detectedAngle, 100, 130, 90, 90, 73);
+    Braccio.ServoMovement(20, detectedAngle, 90, 180, 120, 90, 10); // Move to bottle
+    Braccio.ServoMovement(20, detectedAngle, 90, 180, 120, 90, 73); // Close gripper
+    Braccio.ServoMovement(20, detectedAngle, 90, 130, 120, 90, 73); // Lift bottle
+    Braccio.ServoMovement(10, detectedAngle, 90, 150, 120, 90, 73);
 
     // Move to plant and simulate watering
-    Braccio.ServoMovement(20, 90, 100, 130, 90, 90, 73); // Move to plant
-    Braccio.ServoMovement(20, 90, 100, 130, 90, 0, 73);  // Pour water
+    Braccio.ServoMovement(20, 0, 45, 160, 0, 0, 73); 
+    //Braccio.ServoMovement(20, 150, 100, 130, 90, 90, 73); // Move to plant
+    //Braccio.ServoMovement(20, 150, 100, 130, 90, 0, 73);  // Pour water
     delay(1000);  // Simulate watering action
 
     // Return bottle to original position
-    Braccio.ServoMovement(20, 150, 100, 130, 90, 90, 73); // Straighten arm
-    Braccio.ServoMovement(20, detectedAngle, 100, 130, 90, 90, 73); // Return bottle
-    Braccio.ServoMovement(10, detectedAngle, 150, 120, 90, 90, 73); // Lower arm
-    Braccio.ServoMovement(20, detectedAngle, 150, 120, 90, 90, 10); // Open gripper
+    Braccio.ServoMovement(10, detectedAngle, 90, 150, 120, 90, 73);
+    Braccio.ServoMovement(20, detectedAngle, 90, 130, 120, 90, 73); 
+    Braccio.ServoMovement(20, detectedAngle, 90, 130, 120, 90, 10); // Open gripper
 
     // Return to idle pose
     Braccio.ServoMovement(20, detectedAngle, 90, 90, 90, 90, 10); // Idle position
