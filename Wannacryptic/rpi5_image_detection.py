@@ -33,7 +33,7 @@ def angle(pt1, pt2, pt3):
 # Funcția de identificare a formelor geometrice
 def identify_shapes(frame):
     output = frame.copy()
-    
+
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (9, 9), 2)
     edges = cv2.Canny(blurred, 50, 200)
@@ -50,19 +50,13 @@ def identify_shapes(frame):
 
             if len(approx) == 3:
                 shape = "Triunghi"
-            elif 3 < len(approx) <= 6:
-                pts = approx.reshape(-1, 2)
-                if len(pts) == 3:
-                    shape = "Triunghi"
-                elif len(pts) == 4:
-                    angles = [angle(pts[i], pts[(i + 1) % 4], pts[(i + 2) % 4]) for i in range(4)]
-                    sharp_angles = sum(1 for a in angles if a < 60)
-                    if sharp_angles == 1:
-                        shape = "Triunghi"
             elif len(approx) == 4:
+                pts = approx.reshape(4, 2)
+                angles = [angle(pts[i], pts[(i + 1) % 4], pts[(i + 2) % 4]) for i in range(4)]
+                right_angles = all(80 <= a <= 100 for a in angles)
                 (x, y, w, h) = cv2.boundingRect(approx)
                 aspect_ratio = float(w) / h
-                if 0.90 <= aspect_ratio <= 1.10:
+                if 0.85 <= aspect_ratio <= 1.15 and right_angles:
                     shape = "Patrat"
                 else:
                     shape = "Dreptunghi"
@@ -109,10 +103,9 @@ def video():
 def index():
     return '<h2>Camera Stream - Detectie Forme Geometrice</h2><img src="/video">'
 
+@app.route('/video_feed')
+def video_feed():
+    return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
-
-
-
-
-shape detection
+    app.run(host='172.31.99.35', port=5000)
