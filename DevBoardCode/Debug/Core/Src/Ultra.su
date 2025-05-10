@@ -1,1 +1,1 @@
-../Core/Src/Ultra.c:5:10:Ultrasonic_ReadDistance	16	static
+../Core/Src/Ultra.c:10:10:Ultrasonic_ReadDistance	16	static

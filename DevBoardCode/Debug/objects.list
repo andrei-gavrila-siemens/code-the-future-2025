@@ -6,6 +6,7 @@
 "./Core/Src/syscalls.o"
 "./Core/Src/sysmem.o"
 "./Core/Src/system_stm32f4xx.o"
+"./Core/Src/uart_comm.o"
 "./Core/Startup/startup_stm32f411retx.o"
 "./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal.o"
 "./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_cortex.o"
@@ -22,4 +23,3 @@
 "./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_rcc_ex.o"
 "./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_tim.o"
 "./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_tim_ex.o"
-"./Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_uart.o"

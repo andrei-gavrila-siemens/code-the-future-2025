@@ -1,3 +1,7 @@
 ../Core/Src/Braccio.c:3:13:set_pwm_us	6
 ../Core/Src/Braccio.c:10:6:Braccio_Init	1
 ../Core/Src/Braccio.c:20:6:Braccio_Move	1
+../Core/Src/Braccio.c:37:6:Braccio_SmoothMove	4
+../Core/Src/Braccio.c:62:6:Braccio_RotateAndLiftGripperOpen	2
+../Core/Src/Braccio.c:83:6:Braccio_RotateAndLiftGripperClosed	2
+../Core/Src/Braccio.c:104:6:Braccio_MoveGripperSmooth	2
