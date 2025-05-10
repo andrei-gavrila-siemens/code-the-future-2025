@@ -1,6 +1,10 @@
 from flask import Flask, request, render_template
 from flask_socketio import SocketIO, emit
 import logging
+import CRNN
+import CameraFoto as cf
+from PIL import Image
+import inputARDU as ia
 
 # — Configurare Flask + SocketIO —
 app = Flask(__name__, static_folder='../frontend', template_folder='templates')
@@ -9,14 +13,7 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s: %(message)s')
 
-# — Stub-uri de demo —
-def search_medicine_with_camera(med_name: str) -> bool:
-    logging.info(f"[Camera] Căutare medicament: {med_name}")
-    return True
 
-def initiate_robot_movement(med_name: str) -> bool:
-    logging.info(f"[Robot] Mișcare robot pentru: {med_name}")
-    return True
 
 # — Servește frontend-ul —
 @app.route('/')
@@ -33,6 +30,24 @@ def handle_connect():
 def handle_command(data):
     cmd = data.get('cmd', '').strip().lower()
     logging.info(f"Comandă primită: {cmd}")
+    cf.take_photo('photo.jpg', 2000, 640, 480)
+    cf.rotate('photo.jpg')
+    img = Image.open('photo.jpg')
+    text = CRNN.imgToText('photo.jpg', langs=['ro', 'en'])
+    print(text)
+    commanda = CRNN.getIndice(text, cmd)
+    print(f"Comanda: {commanda}")
+    ia.trimiteComanda(str(commanda)
+    )
+
+# — Stub-uri de demo —
+def search_medicine_with_camera(med_name: str) -> bool:
+    logging.info(f"[Camera] Căutare medicament: {med_name}")
+    return True
+
+def initiate_robot_movement(med_name: str) -> bool:
+    logging.info(f"[Robot] Mișcare robot pentru: {commanda}")
+    return True
 
     if not search_medicine_with_camera(cmd):
         return emit('result', {
