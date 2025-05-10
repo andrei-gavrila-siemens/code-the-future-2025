@@ -1,0 +1,32 @@
+[
+    {
+        "object_type": "cell phone",
+        "area_pixels": 78848,
+        "width_pixels": 308,
+        "height_pixels": 256,
+        "confidence": 0.8492124676704407,
+        "dist_to_top_margin_pixels": 215,
+        "dist_to_left_margin_pixels": 223,
+        "timestamp": "2025-05-10 13:05:51"
+    },
+    {
+        "object_type": "orange",
+        "area_pixels": 23400,
+        "width_pixels": 156,
+        "height_pixels": 150,
+        "confidence": 0.662460207939148,
+        "dist_to_top_margin_pixels": 285,
+        "dist_to_left_margin_pixels": 38,
+        "timestamp": "2025-05-10 13:05:51"
+    },
+    {
+        "object_type": "mouse",
+        "area_pixels": 35700,
+        "width_pixels": 210,
+        "height_pixels": 170,
+        "confidence": 0.583509624004364,
+        "dist_to_top_margin_pixels": 0,
+        "dist_to_left_margin_pixels": 352,
+        "timestamp": "2025-05-10 13:05:51"
+    }
+]

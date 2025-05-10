@@ -1,0 +1,106 @@
+{
+    "banana": {
+        "count": 1650,
+        "total_area": 167110169,
+        "total_width": 482780,
+        "total_height": 571436,
+        "total_dist_to_top": 148850,
+        "total_dist_to_left": 526094
+    },
+    "orange": {
+        "count": 1733,
+        "total_area": 40288299,
+        "total_width": 267604,
+        "total_height": 260878,
+        "total_dist_to_top": 477988,
+        "total_dist_to_left": 133763
+    },
+    "cup": {
+        "count": 1473,
+        "total_area": 37993061,
+        "total_width": 259195,
+        "total_height": 215878,
+        "total_dist_to_top": 13,
+        "total_dist_to_left": 146975
+    },
+    "person": {
+        "count": 83,
+        "total_area": 7675223,
+        "total_width": 27395,
+        "total_height": 23373,
+        "total_dist_to_top": 12315,
+        "total_dist_to_left": 10207
+    },
+    "frisbee": {
+        "count": 47,
+        "total_area": 1570970,
+        "total_width": 8997,
+        "total_height": 7971,
+        "total_dist_to_top": 3478,
+        "total_dist_to_left": 4737
+    },
+    "cell phone": {
+        "count": 1135,
+        "total_area": 97239598,
+        "total_width": 342960,
+        "total_height": 321976,
+        "total_dist_to_top": 200644,
+        "total_dist_to_left": 263045
+    },
+    "dining table": {
+        "count": 144,
+        "total_area": 44094101,
+        "total_width": 92117,
+        "total_height": 68929,
+        "total_dist_to_top": 82,
+        "total_dist_to_left": 14
+    },
+    "laptop": {
+        "count": 3,
+        "total_area": 242552,
+        "total_width": 927,
+        "total_height": 785,
+        "total_dist_to_top": 633,
+        "total_dist_to_left": 667
+    },
+    "carrot": {
+        "count": 1,
+        "total_area": 23840,
+        "total_width": 160,
+        "total_height": 149,
+        "total_dist_to_top": 285,
+        "total_dist_to_left": 37
+    },
+    "knife": {
+        "count": 36,
+        "total_area": 4255462,
+        "total_width": 12726,
+        "total_height": 12038,
+        "total_dist_to_top": 218,
+        "total_dist_to_left": 10241
+    },
+    "fork": {
+        "count": 2,
+        "total_area": 236491,
+        "total_width": 707,
+        "total_height": 669,
+        "total_dist_to_top": 12,
+        "total_dist_to_left": 568
+    },
+    "bottle": {
+        "count": 2,
+        "total_area": 265945,
+        "total_width": 767,
+        "total_height": 694,
+        "total_dist_to_top": 3,
+        "total_dist_to_left": 509
+    },
+    "mouse": {
+        "count": 108,
+        "total_area": 3847858,
+        "total_width": 22636,
+        "total_height": 18359,
+        "total_dist_to_top": 0,
+        "total_dist_to_left": 38088
+    }
+}

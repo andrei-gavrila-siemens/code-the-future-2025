@@ -1,0 +1,686 @@
+{
+    "mouse": {
+        "count": 93,
+        "total_area": 9057774,
+        "detections": [
+            {
+                "area_pixels": 47150,
+                "confidence": 0.7217503190040588,
+                "timestamp": "2025-05-09 15:13:50"
+            },
+            {
+                "area_pixels": 80571,
+                "confidence": 0.7790482044219971,
+                "timestamp": "2025-05-09 15:13:50"
+            },
+            {
+                "area_pixels": 98362,
+                "confidence": 0.8436793088912964,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 114400,
+                "confidence": 0.8295230269432068,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 124880,
+                "confidence": 0.7414184808731079,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 125271,
+                "confidence": 0.6539090275764465,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 123200,
+                "confidence": 0.5833643674850464,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 117725,
+                "confidence": 0.5433627963066101,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 115920,
+                "confidence": 0.5745663046836853,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 112312,
+                "confidence": 0.49550509452819824,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 112185,
+                "confidence": 0.47405457496643066,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 110000,
+                "confidence": 0.5444570779800415,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 109175,
+                "confidence": 0.5165740847587585,
+                "timestamp": "2025-05-09 15:13:52"
+            },
+            {
+                "area_pixels": 95265,
+                "confidence": 0.5270792245864868,
+                "timestamp": "2025-05-09 15:13:52"
+            },
+            {
+                "area_pixels": 98154,
+                "confidence": 0.6645611524581909,
+                "timestamp": "2025-05-09 15:13:52"
+            },
+            {
+                "area_pixels": 94512,
+                "confidence": 0.8511666059494019,
+                "timestamp": "2025-05-09 15:13:52"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.777005136013031,
+                "timestamp": "2025-05-09 15:13:52"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7594693899154663,
+                "timestamp": "2025-05-09 15:13:52"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7592179179191589,
+                "timestamp": "2025-05-09 15:13:52"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7631052732467651,
+                "timestamp": "2025-05-09 15:13:52"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7687405943870544,
+                "timestamp": "2025-05-09 15:13:52"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7763311266899109,
+                "timestamp": "2025-05-09 15:13:52"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7685211300849915,
+                "timestamp": "2025-05-09 15:13:53"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7773168683052063,
+                "timestamp": "2025-05-09 15:13:53"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7710614204406738,
+                "timestamp": "2025-05-09 15:13:53"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7766100764274597,
+                "timestamp": "2025-05-09 15:13:53"
+            },
+            {
+                "area_pixels": 95400,
+                "confidence": 0.7833771109580994,
+                "timestamp": "2025-05-09 15:13:53"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7800382971763611,
+                "timestamp": "2025-05-09 15:13:53"
+            },
+            {
+                "area_pixels": 95400,
+                "confidence": 0.7723801732063293,
+                "timestamp": "2025-05-09 15:13:53"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7804662585258484,
+                "timestamp": "2025-05-09 15:13:53"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7815594673156738,
+                "timestamp": "2025-05-09 15:13:53"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7795732617378235,
+                "timestamp": "2025-05-09 15:13:53"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7831932902336121,
+                "timestamp": "2025-05-09 15:13:54"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.777198076248169,
+                "timestamp": "2025-05-09 15:13:54"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.777715802192688,
+                "timestamp": "2025-05-09 15:13:54"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7758054733276367,
+                "timestamp": "2025-05-09 15:13:54"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7835183143615723,
+                "timestamp": "2025-05-09 15:13:54"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7784484028816223,
+                "timestamp": "2025-05-09 15:13:54"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7797351479530334,
+                "timestamp": "2025-05-09 15:13:54"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7765592932701111,
+                "timestamp": "2025-05-09 15:13:54"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7851781249046326,
+                "timestamp": "2025-05-09 15:13:54"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.77314692735672,
+                "timestamp": "2025-05-09 15:13:54"
+            },
+            {
+                "area_pixels": 95400,
+                "confidence": 0.780730128288269,
+                "timestamp": "2025-05-09 15:13:55"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7822031378746033,
+                "timestamp": "2025-05-09 15:13:55"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7800377011299133,
+                "timestamp": "2025-05-09 15:13:55"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7815385460853577,
+                "timestamp": "2025-05-09 15:13:55"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7734647989273071,
+                "timestamp": "2025-05-09 15:13:55"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7761086821556091,
+                "timestamp": "2025-05-09 15:13:55"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7835623025894165,
+                "timestamp": "2025-05-09 15:13:55"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7712821364402771,
+                "timestamp": "2025-05-09 15:13:55"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7767507433891296,
+                "timestamp": "2025-05-09 15:13:55"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7751426696777344,
+                "timestamp": "2025-05-09 15:13:55"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7759478092193604,
+                "timestamp": "2025-05-09 15:13:55"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7693904638290405,
+                "timestamp": "2025-05-09 15:13:56"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7735645771026611,
+                "timestamp": "2025-05-09 15:13:56"
+            },
+            {
+                "area_pixels": 95760,
+                "confidence": 0.7734719514846802,
+                "timestamp": "2025-05-09 15:13:56"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7791014313697815,
+                "timestamp": "2025-05-09 15:13:56"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7748984098434448,
+                "timestamp": "2025-05-09 15:13:56"
+            },
+            {
+                "area_pixels": 95760,
+                "confidence": 0.7741175293922424,
+                "timestamp": "2025-05-09 15:13:56"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7734096050262451,
+                "timestamp": "2025-05-09 15:13:56"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7766436338424683,
+                "timestamp": "2025-05-09 15:13:56"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.773257851600647,
+                "timestamp": "2025-05-09 15:13:56"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7733689546585083,
+                "timestamp": "2025-05-09 15:13:56"
+            },
+            {
+                "area_pixels": 96292,
+                "confidence": 0.7676125168800354,
+                "timestamp": "2025-05-09 15:13:57"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7608070373535156,
+                "timestamp": "2025-05-09 15:13:57"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7744776010513306,
+                "timestamp": "2025-05-09 15:13:57"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7709861397743225,
+                "timestamp": "2025-05-09 15:13:57"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7789286375045776,
+                "timestamp": "2025-05-09 15:13:57"
+            },
+            {
+                "area_pixels": 95930,
+                "confidence": 0.771440327167511,
+                "timestamp": "2025-05-09 15:13:57"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7734795808792114,
+                "timestamp": "2025-05-09 15:13:57"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.77091383934021,
+                "timestamp": "2025-05-09 15:13:57"
+            },
+            {
+                "area_pixels": 95760,
+                "confidence": 0.7704591155052185,
+                "timestamp": "2025-05-09 15:13:57"
+            },
+            {
+                "area_pixels": 95400,
+                "confidence": 0.7726287245750427,
+                "timestamp": "2025-05-09 15:13:57"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7775214910507202,
+                "timestamp": "2025-05-09 15:13:58"
+            },
+            {
+                "area_pixels": 95400,
+                "confidence": 0.7860625386238098,
+                "timestamp": "2025-05-09 15:13:58"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7833639979362488,
+                "timestamp": "2025-05-09 15:13:58"
+            },
+            {
+                "area_pixels": 96292,
+                "confidence": 0.7731698155403137,
+                "timestamp": "2025-05-09 15:13:58"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.76900315284729,
+                "timestamp": "2025-05-09 15:13:58"
+            },
+            {
+                "area_pixels": 95760,
+                "confidence": 0.7690606713294983,
+                "timestamp": "2025-05-09 15:13:58"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7690412998199463,
+                "timestamp": "2025-05-09 15:13:58"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7675175666809082,
+                "timestamp": "2025-05-09 15:13:58"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7630537152290344,
+                "timestamp": "2025-05-09 15:13:58"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.766617476940155,
+                "timestamp": "2025-05-09 15:13:58"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7641069889068604,
+                "timestamp": "2025-05-09 15:13:59"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7612988352775574,
+                "timestamp": "2025-05-09 15:13:59"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.755764365196228,
+                "timestamp": "2025-05-09 15:13:59"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7654709815979004,
+                "timestamp": "2025-05-09 15:13:59"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7562873959541321,
+                "timestamp": "2025-05-09 15:13:59"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7627930045127869,
+                "timestamp": "2025-05-09 15:13:59"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.761344313621521,
+                "timestamp": "2025-05-09 15:13:59"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7676798105239868,
+                "timestamp": "2025-05-09 15:13:59"
+            },
+            {
+                "area_pixels": 96026,
+                "confidence": 0.7713638544082642,
+                "timestamp": "2025-05-09 15:13:59"
+            },
+            {
+                "area_pixels": 95665,
+                "confidence": 0.7701651453971863,
+                "timestamp": "2025-05-09 15:13:59"
+            }
+        ]
+    },
+    "cell phone": {
+        "count": 7,
+        "total_area": 704301,
+        "detections": [
+            {
+                "area_pixels": 46893,
+                "confidence": 0.49310433864593506,
+                "timestamp": "2025-05-09 15:13:50"
+            },
+            {
+                "area_pixels": 117725,
+                "confidence": 0.4606046676635742,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 113243,
+                "confidence": 0.5648365020751953,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 112312,
+                "confidence": 0.5613080263137817,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 111200,
+                "confidence": 0.6514527201652527,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 110000,
+                "confidence": 0.5330003499984741,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 92928,
+                "confidence": 0.48839080333709717,
+                "timestamp": "2025-05-09 15:13:52"
+            }
+        ]
+    },
+    "remote": {
+        "count": 12,
+        "total_area": 1302095,
+        "detections": [
+            {
+                "area_pixels": 97820,
+                "confidence": 0.47497132420539856,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 124880,
+                "confidence": 0.529962956905365,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 123200,
+                "confidence": 0.46593624353408813,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 117852,
+                "confidence": 0.5737953782081604,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 111228,
+                "confidence": 0.5323341488838196,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 108468,
+                "confidence": 0.5285786390304565,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 107835,
+                "confidence": 0.5540274977684021,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 105690,
+                "confidence": 0.5200661420822144,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 102528,
+                "confidence": 0.5580142140388489,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 109175,
+                "confidence": 0.5618093013763428,
+                "timestamp": "2025-05-09 15:13:52"
+            },
+            {
+                "area_pixels": 95265,
+                "confidence": 0.6322227120399475,
+                "timestamp": "2025-05-09 15:13:52"
+            },
+            {
+                "area_pixels": 98154,
+                "confidence": 0.5738542079925537,
+                "timestamp": "2025-05-09 15:13:52"
+            }
+        ]
+    },
+    "person": {
+        "count": 20,
+        "total_area": 1396049,
+        "detections": [
+            {
+                "area_pixels": 26160,
+                "confidence": 0.4565647840499878,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 26640,
+                "confidence": 0.5229073762893677,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 32007,
+                "confidence": 0.4767417013645172,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 34410,
+                "confidence": 0.5414966940879822,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 37840,
+                "confidence": 0.5490657091140747,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 115290,
+                "confidence": 0.5103152394294739,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 43239,
+                "confidence": 0.5442779660224915,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 115670,
+                "confidence": 0.5249532461166382,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 40600,
+                "confidence": 0.5541656017303467,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 115508,
+                "confidence": 0.4781719148159027,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 43466,
+                "confidence": 0.5478943586349487,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 115976,
+                "confidence": 0.49794521927833557,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 61152,
+                "confidence": 0.5854635238647461,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 112398,
+                "confidence": 0.5279885530471802,
+                "timestamp": "2025-05-09 15:13:51"
+            },
+            {
+                "area_pixels": 67976,
+                "confidence": 0.6274082660675049,
+                "timestamp": "2025-05-09 15:13:52"
+            },
+            {
+                "area_pixels": 99580,
+                "confidence": 0.6155176162719727,
+                "timestamp": "2025-05-09 15:13:52"
+            },
+            {
+                "area_pixels": 73143,
+                "confidence": 0.6702582836151123,
+                "timestamp": "2025-05-09 15:13:52"
+            },
+            {
+                "area_pixels": 117832,
+                "confidence": 0.5645228028297424,
+                "timestamp": "2025-05-09 15:13:52"
+            },
+            {
+                "area_pixels": 71961,
+                "confidence": 0.5462620258331299,
+                "timestamp": "2025-05-09 15:13:52"
+            },
+            {
+                "area_pixels": 45201,
+                "confidence": 0.5319995284080505,
+                "timestamp": "2025-05-09 15:13:52"
+            }
+        ]
+    }
+}
