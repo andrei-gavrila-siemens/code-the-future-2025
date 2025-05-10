@@ -2,6 +2,7 @@
 #include <Servo.h>
 #include <Arduino.h>
 
+// DEFINIRE PINI
 #define X A0
 #define Y A1
 #define A 8
@@ -10,9 +11,11 @@
 #define D 7
 #define E 0
 #define F 1
-#define idleTimer 2000
+
+// POZITIE CENTRU JOYSTICK
 #define JOYSTICK_CENTER 512
 
+// MOTOARE
 Servo base;
 Servo shoulder;
 Servo elbow;
@@ -20,6 +23,7 @@ Servo wrist_rot;
 Servo wrist_ver;
 Servo gripper;
 
+// POZITIILE BRATULUI
 int baseAngle_idle = 90;
 int shoulderAngle_idle = 0;
 int elbowAngle_idle = 180;
@@ -46,9 +50,8 @@ int wristVerAngle = 90;
 int wristRotAngle = 90;
 int gripperAngle = 73;
 
-bool isGrabbing = false;
-bool isJoystickBtnPressed = false;
 
+// INTRARI
 int xAxisValue;
 int yAxisValue;
 
@@ -80,29 +83,12 @@ void setup()
 
   Braccio.begin();
   state = Idle;
-  // idle();
 }
+
 
 void loop()
 {
-  joystickConfig();
-// Serial.print("xAxisValue: ");
-// Serial.print(xAxisValue);
-// Serial.print(" | yAxisValue: ");
-// Serial.print(yAxisValue);
-// Serial.print(" | aBtnValue: ");
-// Serial.print(aBtnValue);
-// Serial.print(" | bBtnValue: ");
-// Serial.print(bBtnValue);
-// Serial.print(" | cBtnValue: ");
-// Serial.print(cBtnValue);
-// Serial.print(" | dBtnValue: ");
-// Serial.print(dBtnValue);
-// Serial.print(" | eBtnValue: ");
-// Serial.print(eBtnValue);
-// Serial.print(" | fBtnValue: ");
-// Serial.println(fBtnValue);
-
+  joystickInputHandler();
 
   switch (state)
   {
@@ -129,6 +115,7 @@ void loop()
   shoulderAngle = constrain(shoulderAngle, 0, 180);
 }
 
+// Functie de resetare a pozitiei bratului
 void runIdle()
 {
   // Serial.println("IDLE");
@@ -146,6 +133,7 @@ void runIdle()
   }
 }
 
+// Functie de control manual al bratului robotic
 void runManual()
 {
   // Serial.println("RUN");
@@ -183,6 +171,7 @@ void runManual()
   }
 }
 
+//Functie pentru miscarea automata a bratului
 void runAuto()
 {
   baseAngle = baseAngle_auto_start;
@@ -190,9 +179,10 @@ void runAuto()
   elbowAngle = elbowAngle_auto_start;
   wristVerAngle = wristVerAngle_auto_start;
   wristRotAngle = wristRotAngle_auto_start;
+
   Braccio.ServoMovement(60, baseAngle, shoulderAngle, elbowAngle - 20, wristVerAngle, wristRotAngle, 10);
 
-  joystickConfig();
+  joystickInputHandler();
   if (isAnyBtnPressed() && !cBtnValue)
   {
     state = Manual;
@@ -200,7 +190,8 @@ void runAuto()
 
   Braccio.ServoMovement(20, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, 73);
   
-  joystickConfig();
+
+  joystickInputHandler();
   if (isAnyBtnPressed() && !cBtnValue)
   {
     state = Manual;
@@ -213,7 +204,7 @@ void runAuto()
   wristRotAngle = wristRotAngle_auto_end;
   Braccio.ServoMovement(60, baseAngle, shoulderAngle, elbowAngle - 10, wristVerAngle, wristRotAngle, 73);
 
-  joystickConfig();
+  joystickInputHandler();
   if (isAnyBtnPressed() && !cBtnValue)
   {
     state = Manual;
@@ -221,13 +212,14 @@ void runAuto()
 
   Braccio.ServoMovement(60, baseAngle, shoulderAngle, elbowAngle, wristVerAngle, wristRotAngle, 10);
 
-  joystickConfig();
+  joystickInputHandler();
   if (isAnyBtnPressed() && !cBtnValue)
   {
     state = Manual;
   }
 }
 
+// Functie care controleaza miscarile bratului
 void armController()
 {   
   baseAngle += xAxisValue * .1;
@@ -247,12 +239,14 @@ void armController()
   }
 }
 
+// Functie care verifica daca este un buton apasat
 bool isAnyBtnPressed()
 {
   return (xAxisValue != 0 || yAxisValue != 0 || aBtnValue || bBtnValue || cBtnValue || dBtnValue || eBtnValue || fBtnValue);
 }
 
-void joystickConfig()
+// Functie care primeste datele de la joystick
+void joystickInputHandler()
 {
   xAxisValue = analogRead(X);
   yAxisValue = analogRead(Y);
@@ -294,7 +288,7 @@ void joystickConfig()
 // Serial.println(fBtnValue);
 }
 
-// Normalize joystick values to -1 to 1 range
+// Functie care seteaza valoarea pe axe intre -100 si 100
 int mapToRange(int value) 
 {
   return (int)((float)(value - JOYSTICK_CENTER) / (JOYSTICK_CENTER) * 100);
